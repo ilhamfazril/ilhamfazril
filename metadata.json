@@ -1,0 +1,6 @@
+{
+  "name": "Ilham Fazril - Luxury Portfolio & Dev Hub",
+  "description": "Ultra-luxurious portfolio and high-tech developer management hub for Ilham Fazril with NFC authentication, QR pass, and dynamic social media manager.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
