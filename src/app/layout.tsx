@@ -12,16 +12,8 @@ export const metadata: Metadata = {
   title: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
   description:
     'Ultra-luxurious portfolio and high-tech developer management hub for Ilham Fazril with NFC authentication, QR pass, and dynamic social media manager.',
-  keywords: [
-    'Ilham Fazril',
-    'ilhamfazril.my.id',
-    'Web Developer Cimahi',
-    'UI UX Designer Bandung',
-    'Portofolio Ilham Fazril',
-    'NFC Smart Card',
-    'Pusdikhubad Cimahi',
-    'SMK Pusdikhub',
-  ],
+  keywords:
+    'Ilham Fazril, ilhamfazril.my.id, Web Developer Cimahi, UI UX Designer Bandung, Portofolio Ilham Fazril, NFC Smart Card, Pusdikhubad Cimahi, SMK Pusdikhub',
   authors: [{ name: 'Ilham Fazril' }],
   creator: 'Ilham Fazril',
   publisher: 'Ilham Fazril',
@@ -104,8 +96,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark">
+      <head />
       <body className="bg-stone-950 text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-200 min-h-screen">
         <script
+          key="schema-jsonld"
           id="schema-jsonld"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
