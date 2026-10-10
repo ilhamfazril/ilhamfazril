@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { 
-  Terminal, 
   Radio, 
   Cpu, 
   Layers, 
   Volume2,
   CheckCircle2,
-  Sparkles,
-  Loader2
+  Loader2,
+  ArrowRight
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
@@ -16,89 +17,127 @@ export const ModernWebsiteIntro: React.FC = () => {
   const { showWebsiteIntro, setShowWebsiteIntro } = usePortfolio();
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('Memulai inisialisasi modul UI...');
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const hasTriggeredDismiss = useRef(false);
 
-  useEffect(() => {
-    if (!showWebsiteIntro) return;
-
-    // Ensure page is pinned to top immediately
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-
-    sound.playFuturisticIntro();
-
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-
-        // Smooth progressive increments
-        let step = 3;
-        if (prev < 20) step = 4;
-        else if (prev < 50) step = 3;
-        else if (prev < 80) step = 2;
-        else if (prev < 95) step = 1;
-        else step = 2;
-
-        const next = Math.min(100, prev + step);
-
-        // Update system loading logs based on percentage
-        if (next < 25) {
-          setStatusMessage('Memuat arsitektur UI & aset visual beresolusi tinggi...');
-        } else if (next < 55) {
-          setStatusMessage('Inisialisasi subsistem Web NFC 13.56 MHz & protokol ISO-14443A...');
-        } else if (next < 85) {
-          setStatusMessage('Mengoptimalkan responsivitas layout 60 FPS & audio synth...');
-        } else if (next < 100) {
-          setStatusMessage('Sinkronisasi identitas developer Ilham Fazril...');
-        } else {
-          setStatusMessage('Pemuatan selesai! Memasuki halaman utama...');
-        }
-
-        return next;
-      });
-    }, 70);
-
-    return () => clearInterval(interval);
-  }, [showWebsiteIntro]);
-
-  // Automatic seamless transition to main website once progress hits 100%
-  useEffect(() => {
-    if (progress === 100 && showWebsiteIntro) {
-      const timer = setTimeout(() => {
-        sound.playSuccess();
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  const safeScrollToTop = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0);
         if (document.documentElement) document.documentElement.scrollTop = 0;
         if (document.body) document.body.scrollTop = 0;
-        try {
-          sessionStorage.setItem('ilham_seen_website_intro', 'true');
-        } catch {}
-        setShowWebsiteIntro(false);
-      }, 400);
-
-      return () => clearTimeout(timer);
-    }
-  }, [progress, showWebsiteIntro, setShowWebsiteIntro]);
-
-  const handleSkipIntro = () => {
-    sound.playClick();
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
-    try {
-      sessionStorage.setItem('ilham_seen_website_intro', 'true');
+      }
     } catch {}
-    setShowWebsiteIntro(false);
+  }, []);
+
+  const triggerDismiss = useCallback(() => {
+    if (hasTriggeredDismiss.current) return;
+    hasTriggeredDismiss.current = true;
+
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('ilham_seen_website_intro', 'true');
+      }
+    } catch {}
+
+    setIsExiting(true);
+    safeScrollToTop();
+
+    // Smooth fade out animation before unmount
+    setTimeout(() => {
+      setIsDismissed(true);
+      setShowWebsiteIntro(false);
+      safeScrollToTop();
+    }, 280);
+  }, [safeScrollToTop, setShowWebsiteIntro]);
+
+  // Audio start & Auto-progress logic
+  useEffect(() => {
+    if (!showWebsiteIntro || isDismissed) return;
+
+    safeScrollToTop();
+
+    try {
+      sound.playFuturisticIntro();
+    } catch {}
+
+    const startTime = Date.now();
+    const targetDuration = 1800; // 1.8s smooth duration
+
+    const frameInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const calculatedProgress = Math.min(100, Math.round((elapsed / targetDuration) * 100));
+
+      setProgress(calculatedProgress);
+
+      if (calculatedProgress < 25) {
+        setStatusMessage('Memuat arsitektur UI & aset visual beresolusi tinggi...');
+      } else if (calculatedProgress < 55) {
+        setStatusMessage('Inisialisasi subsistem Web NFC 13.56 MHz & protokol ISO-14443A...');
+      } else if (calculatedProgress < 85) {
+        setStatusMessage('Mengoptimalkan responsivitas layout 60 FPS & audio synth...');
+      } else if (calculatedProgress < 100) {
+        setStatusMessage('Sinkronisasi identitas developer Ilham Fazril...');
+      } else {
+        setStatusMessage('Pemuatan selesai! Memasuki halaman utama...');
+        clearInterval(frameInterval);
+        try {
+          sound.playSuccess();
+        } catch {}
+        setTimeout(() => {
+          triggerDismiss();
+        }, 250);
+      }
+    }, 45);
+
+    // Hard fail-safe watchdog timer: strictly auto-enter after 2.5 seconds max
+    const watchdog = setTimeout(() => {
+      clearInterval(frameInterval);
+      triggerDismiss();
+    }, 2500);
+
+    // Global keyboard listener (Escape, Space, Enter)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        try {
+          sound.playClick();
+        } catch {}
+        triggerDismiss();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(frameInterval);
+      clearTimeout(watchdog);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showWebsiteIntro, isDismissed, safeScrollToTop, triggerDismiss]);
+
+  const handleManualSkip = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      sound.playClick();
+    } catch {}
+    triggerDismiss();
   };
 
-  if (!showWebsiteIntro) return null;
+  if (!showWebsiteIntro || isDismissed) {
+    return null;
+  }
 
   return (
     <div
       id="modern-website-intro-overlay"
-      className="fixed inset-0 z-100 bg-black text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden animate-in fade-in duration-300 select-none"
+      onClick={handleManualSkip}
+      className={`fixed inset-0 z-[9999] bg-black text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden select-none cursor-pointer transition-opacity duration-300 ${
+        isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
+      }`}
+      aria-label="Animasi Pembuka - Klik di mana saja untuk melewati intro"
     >
       {/* Background Cyber Grid & Ambient Glows */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d40f_1px,transparent_1px),linear-gradient(to_bottom,#06b6d40f_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
@@ -106,8 +145,10 @@ export const ModernWebsiteIntro: React.FC = () => {
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Glass Card Container */}
-      <div className="relative w-full max-w-lg rounded-3xl bg-stone-950/95 border border-cyan-500/40 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_0_60px_rgba(6,182,212,0.22)] flex flex-col items-center text-center space-y-6">
-        
+      <div 
+        onClick={e => e.stopPropagation()} 
+        className="relative w-full max-w-lg rounded-3xl bg-stone-950/95 border border-cyan-500/40 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_0_60px_rgba(6,182,212,0.22)] flex flex-col items-center text-center space-y-6 cursor-default"
+      >
         {/* Holographic Monogram Hexagon Badge */}
         <div className="relative">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-600 to-cyan-500 p-[2px] shadow-lg shadow-cyan-500/40 animate-pulse">
@@ -158,7 +199,7 @@ export const ModernWebsiteIntro: React.FC = () => {
           {/* Progress Bar with Glow */}
           <div className="w-full h-3 rounded-full bg-stone-900 overflow-hidden p-[2px] border border-cyan-500/40">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-500 transition-all duration-150 ease-out shadow-[0_0_12px_#06b6d4]"
+              className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-500 transition-all duration-100 ease-out shadow-[0_0_12px_#06b6d4]"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -171,7 +212,7 @@ export const ModernWebsiteIntro: React.FC = () => {
             </div>
             <div className="p-2 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center justify-center gap-1">
               <Layers size={11} className="text-cyan-400 shrink-0" />
-              <span className="truncate">React 18 + TS</span>
+              <span className="truncate">Next.js + TS</span>
             </div>
             <div className="p-2 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center justify-center gap-1">
               <Volume2 size={11} className="text-cyan-400 shrink-0" />
@@ -182,14 +223,17 @@ export const ModernWebsiteIntro: React.FC = () => {
 
         {/* Loading Footer Info & Skip Button */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full pt-1">
-          <span className="text-[11px] font-mono-tech text-stone-500 text-center sm:text-left">
-            Otomatis masuk saat 100%
+          <span className="text-[11px] font-mono-tech text-stone-400 text-center sm:text-left">
+            Otomatis masuk atau klik layar
           </span>
           <button
-            onClick={handleSkipIntro}
-            className="px-3.5 py-1.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 hover:border-cyan-500/40 text-[11px] font-mono-tech text-stone-300 hover:text-cyan-300 transition-all cursor-pointer"
+            type="button"
+            onClick={handleManualSkip}
+            onTouchEnd={handleManualSkip}
+            className="group relative z-30 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono-tech font-bold text-xs shadow-lg shadow-cyan-500/30 transition-all transform active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
-            Lewati Intro →
+            <span>Lewati Intro</span>
+            <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
 

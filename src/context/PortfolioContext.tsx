@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   ThemeMode, 
@@ -135,34 +137,45 @@ const LOCAL_STORAGE_KEYS = {
   SOUND: 'ilham_portfolio_sound',
 };
 
+const getStoredItem = (key: string): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const getStoredSessionItem = (key: string): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Theme State
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.THEME);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.THEME);
     return (saved as ThemeMode) || 'dark';
   });
 
   // Sound State
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SOUND);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.SOUND);
     return saved !== null ? saved === 'true' : true;
   });
 
   // Website Intro State (Modern Entrance)
-  const [showWebsiteIntro, setShowWebsiteIntro] = useState<boolean>(() => {
-    try {
-      const seen = sessionStorage.getItem('ilham_seen_website_intro');
-      return !seen;
-    } catch {
-      return true;
-    }
-  });
+  const [showWebsiteIntro, setShowWebsiteIntro] = useState<boolean>(true);
 
   // NFC Login Intro State (Specialized 13.56 MHz Card Login Intro)
   const [showNfcLoginIntro, setShowNfcLoginIntro] = useState<boolean>(false);
   const [nfcIntroDetails, setNfcIntroDetails] = useState<{ uid: string; timestamp: string }>({
     uid: '04:A2:8B:C1:29:4F:80',
-    timestamp: new Date().toLocaleTimeString('id-ID'),
+    timestamp: '10:00:00',
   });
 
   // View & Modal State
@@ -184,7 +197,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Floating Dismissed Announcements (sessionStorage)
   const [dismissedAnnouncementIds, setDismissedAnnouncementIds] = useState<string[]>(() => {
     try {
-      const saved = sessionStorage.getItem('ilham_dismissed_announcements');
+      const saved = getStoredSessionItem('ilham_dismissed_announcements');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -195,12 +208,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [showNfcSuccessModal, setShowNfcSuccessModal] = useState<boolean>(false);
   const [nfcSuccessDetails, setNfcSuccessDetails] = useState<{ uid: string; timestamp: string }>({
     uid: '04:A2:8B:C1:29:4F:80',
-    timestamp: new Date().toLocaleTimeString('id-ID'),
+    timestamp: '10:00:00',
   });
 
   // Auth State
   const [auth, setAuth] = useState<DeveloperSession>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.AUTH);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -219,7 +232,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Socials State
   const [socials, setSocials] = useState<SocialPlatform[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SOCIALS);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.SOCIALS);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -230,7 +243,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Projects State
   const [projects, setProjects] = useState<Project[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PROJECTS);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.PROJECTS);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -241,7 +254,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Education State
   const [education, setEducation] = useState<EducationItem[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.EDUCATION);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.EDUCATION);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -260,7 +273,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Announcements State
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.ANNOUNCEMENTS);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.ANNOUNCEMENTS);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -274,7 +287,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // NFC Cards State
   const [nfcCards, setNfcCards] = useState<NfcCardRecord[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.NFC_CARDS);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.NFC_CARDS);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -285,7 +298,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Inquiries State
   const [inquiries, setInquiries] = useState<MessageInquiry[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.INQUIRIES);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.INQUIRIES);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -307,7 +320,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Analytics State
   const [analytics, setAnalytics] = useState<AnalyticsData>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.ANALYTICS);
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.ANALYTICS);
     if (saved) {
       try {
         return JSON.parse(saved);

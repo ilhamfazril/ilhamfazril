@@ -40,7 +40,7 @@ export const AuthSuccessModal: React.FC = () => {
   return (
     <div
       id="auth-success-modal-overlay"
-      className="fixed inset-0 z-100 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300"
       onClick={handleStayOnPublic}
     >
       <div

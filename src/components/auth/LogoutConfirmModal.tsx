@@ -31,7 +31,7 @@ export const LogoutConfirmModal: React.FC = () => {
   return (
     <div
       id="logout-confirm-modal-overlay"
-      className="fixed inset-0 z-100 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
       onClick={handleCancel}
     >
       <div

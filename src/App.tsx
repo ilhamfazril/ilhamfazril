@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { PortfolioProvider, usePortfolio } from './context/PortfolioContext';
 import { DeveloperActiveToolbar } from './components/public/DeveloperActiveToolbar';
@@ -22,21 +24,25 @@ const PortfolioApp: React.FC = () => {
 
   // Disable browser automatic scroll restoration on load/refresh
   React.useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    try {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    } catch {}
   }, []);
 
   // Guarantee that when intro animation completes, the website strictly starts from the very top
   React.useEffect(() => {
     if (!showWebsiteIntro && !showNfcLoginIntro) {
       const pinToTop = () => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        if (document.documentElement) document.documentElement.scrollTop = 0;
-        if (document.body) document.body.scrollTop = 0;
+        try {
+          window.scrollTo(0, 0);
+          if (document.documentElement) document.documentElement.scrollTop = 0;
+          if (document.body) document.body.scrollTop = 0;
+        } catch {}
       };
 
       pinToTop();

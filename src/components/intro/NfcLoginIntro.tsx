@@ -33,27 +33,35 @@ export const NfcLoginIntro: React.FC = () => {
   if (!showNfcLoginIntro) return null;
 
   const handleGoToAdmin = () => {
-    sound.playSuccess();
+    try {
+      sound.playSuccess();
+    } catch {}
     setShowNfcLoginIntro(false);
     setViewMode('admin');
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    try {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    } catch {}
   };
 
   const handleStayOnPublic = () => {
-    sound.playClick();
+    try {
+      sound.playClick();
+    } catch {}
     setShowNfcLoginIntro(false);
     setViewMode('public');
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    try {
+      window.scrollTo(0, 0);
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    } catch {}
   };
 
   return (
     <div
       id="nfc-login-intro-modal"
-      className="fixed inset-0 z-100 bg-black/95 text-white flex items-center justify-center p-4 sm:p-6 overflow-hidden backdrop-blur-2xl animate-in fade-in duration-300"
+      className="fixed inset-0 z-[9999] bg-black/95 text-white flex items-center justify-center p-4 sm:p-6 overflow-hidden backdrop-blur-2xl animate-in fade-in duration-300"
       onClick={handleStayOnPublic}
     >
       {/* Background Radiance & 13.56 MHz Pulsing Radar Rings */}
