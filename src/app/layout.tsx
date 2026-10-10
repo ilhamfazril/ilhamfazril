@@ -9,12 +9,27 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ilhamfazril.my.id'),
-  title: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
+  title: 'Ilham Fazril | Website Portofolio & Web Developer',
   description:
-    'Ultra-luxurious portfolio and high-tech developer management hub for Ilham Fazril with NFC authentication, QR pass, and dynamic social media manager.',
-  keywords:
-    'Ilham Fazril, ilhamfazril.my.id, Web Developer Cimahi, UI UX Designer Bandung, Portofolio Ilham Fazril, NFC Smart Card, Pusdikhubad Cimahi, SMK Pusdikhub',
-  authors: [{ name: 'Ilham Fazril' }],
+    'Website Portofolio resmi Ilham Fazril - Web Developer dan UI/UX Designer alumni SMK Pusdikhubad Cimahi. Proyek web modern, Next.js, React, TypeScript, dan arsitektur NFC Smart Card.',
+  keywords: [
+    'Ilham',
+    'Ilham Fazril',
+    'Website Ilham',
+    'Website Ilham Fazril',
+    'Ilham Developer',
+    'Ilham Web Developer',
+    'Ilham Fazril Cimahi',
+    'Portofolio Ilham Fazril',
+    'ilhamfazril.my.id',
+    'Web Developer Cimahi',
+    'Web Developer Bandung',
+    'UI UX Designer Bandung',
+    'SMK Pusdikhubad Cimahi',
+    'SMK Pusdikhub',
+    'NFC Smart Card',
+  ],
+  authors: [{ name: 'Ilham Fazril', url: 'https://ilhamfazril.my.id' }],
   creator: 'Ilham Fazril',
   publisher: 'Ilham Fazril',
   robots: {
@@ -23,6 +38,9 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   },
   alternates: {
@@ -31,17 +49,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://ilhamfazril.my.id/',
-    title: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
+    title: 'Ilham Fazril | Website Portofolio & Web Developer',
     description:
-      'Ultra-luxurious portfolio and high-tech developer management hub for Ilham Fazril with NFC authentication, QR pass, and dynamic social media manager.',
-    siteName: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
+      'Website Portofolio resmi Ilham Fazril - Web Developer dan UI/UX Designer alumni SMK Pusdikhubad Cimahi. Proyek web modern, Next.js, React, TypeScript, dan arsitektur NFC Smart Card.',
+    siteName: 'Ilham Fazril',
     locale: 'id_ID',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
+    title: 'Ilham Fazril | Website Portofolio & Web Developer',
     description:
-      'Ultra-luxurious portfolio and high-tech developer management hub for Ilham Fazril with NFC authentication, QR pass, and dynamic social media manager.',
+      'Website Portofolio resmi Ilham Fazril - Web Developer dan UI/UX Designer alumni SMK Pusdikhubad Cimahi.',
+  },
+  verification: {
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
+      'JIuRwhZ93Nhidw3RA2ROMOUkwet_tqwqbvXQKh98msk',
   },
 };
 
@@ -52,12 +75,19 @@ const jsonLd = {
       '@type': 'Person',
       '@id': 'https://ilhamfazril.my.id/#person',
       name: 'Ilham Fazril',
+      alternateName: [
+        'Ilham',
+        'Ilham Developer',
+        'Website Ilham',
+        'Website Ilham Fazril',
+      ],
       jobTitle: 'Web Developer & UI/UX Specialist',
       url: 'https://ilhamfazril.my.id/',
       email: 'ilhamfazril042@gmail.com',
       alumniOf: {
         '@type': 'EducationalOrganization',
         name: 'SMK Pusdikhubad Cimahi',
+        alternateName: 'SMK Pusdikhub Cimahi',
       },
       address: {
         '@type': 'PostalAddress',
@@ -71,20 +101,35 @@ const jsonLd = {
         'React',
         'TypeScript',
         'UI/UX Design',
-        'NFC 13.56 MHz Architecture',
         'Tailwind CSS',
+        'NFC Smart Card Architecture',
       ],
     },
     {
       '@type': 'WebSite',
       '@id': 'https://ilhamfazril.my.id/#website',
       url: 'https://ilhamfazril.my.id/',
-      name: 'Ilham Fazril - Luxury Portfolio & Dev Hub',
-      description: 'Portofolio resmi & Developer Command Center Ilham Fazril',
+      name: 'Ilham Fazril - Website & Portfolio Developer',
+      alternateName: [
+        'Website Ilham',
+        'Website Ilham Fazril',
+        'Portofolio Ilham Fazril',
+        'Ilham Developer',
+      ],
+      description: 'Website resmi dan portofolio profesional Ilham Fazril, Web Developer & UI/UX Specialist.',
       publisher: {
         '@id': 'https://ilhamfazril.my.id/#person',
       },
       inLanguage: 'id-ID',
+    },
+    {
+      '@type': 'ProfilePage',
+      '@id': 'https://ilhamfazril.my.id/#profilepage',
+      url: 'https://ilhamfazril.my.id/',
+      name: 'Profil Ilham Fazril',
+      mainEntity: {
+        '@id': 'https://ilhamfazril.my.id/#person',
+      },
     },
   ],
 };
