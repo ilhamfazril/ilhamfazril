@@ -1,3 +1,16 @@
+export interface ProfileConfig {
+  name: string;
+  headlineRole: string;
+  tagline: string;
+  location: string;
+  statusBadge: string;
+  photoUrl: string;
+  yearsOfExp: string;
+  projectsCompleted: string;
+  satisfactionRate: string;
+  bioShort?: string;
+}
+
 export type ThemeMode = 'dark' | 'light';
 
 export type AuthMethod = 'credentials' | 'qr' | 'nfc' | 'recovery';

@@ -1,20 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { 
   ArrowUpRight, 
-  Terminal, 
   Radio, 
-  Cpu, 
+  MapPin, 
+  Sparkles, 
   CheckCircle2, 
-  Share2,
+  ShieldCheck, 
+  Briefcase,
+  Layers,
+  Award,
   Zap,
-  ShieldCheck,
-  Layers
+  Share2
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
 export const HeroSection: React.FC = () => {
-  const { setShowAuthModal, setAuthModalTab } = usePortfolio();
+  const { setShowAuthModal, setAuthModalTab, profile, trackContactClick } = usePortfolio();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleScrollTo = (id: string) => {
     sound.playClick();
@@ -31,7 +34,7 @@ export const HeroSection: React.FC = () => {
   return (
     <section 
       id="hero" 
-      className="relative min-h-[85vh] pt-8 sm:pt-14 pb-16 sm:pb-20 flex items-center justify-center overflow-hidden w-full max-w-full"
+      className="relative min-h-[85vh] pt-6 sm:pt-12 pb-16 sm:pb-20 flex items-center justify-center overflow-hidden w-full max-w-full"
     >
       {/* Background ambient lighting - strictly contained */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[250px] sm:h-[350px] bg-cyan-500/10 dark:bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none max-w-full" />
@@ -43,9 +46,9 @@ export const HeroSection: React.FC = () => {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           
-          {/* Main Typography & Pitch */}
+          {/* Left Column: Main Headline, Pitch & Bio (7 Columns) */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             
             {/* Status Pill */}
@@ -55,7 +58,7 @@ export const HeroSection: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400" />
               </span>
               <span className="text-xs font-mono-tech uppercase tracking-widest text-cyan-600 dark:text-cyan-300 font-bold">
-                Frontend Web Developer & UI/UX Specialist
+                {profile.headlineRole || 'Frontend Web Developer & UI/UX Specialist'}
               </span>
             </div>
 
@@ -64,11 +67,11 @@ export const HeroSection: React.FC = () => {
               <h1 className="text-3xl sm:text-5xl xl:text-6xl font-serif-luxury font-black tracking-tight leading-[1.15] text-stone-950 dark:text-white dark:drop-shadow-[0_2px_15px_rgba(255,255,255,0.2)]">
                 Selamat Datang Di Portofolio <br className="hidden sm:inline" />
                 <span className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-700 dark:from-cyan-300 dark:via-sky-200 dark:to-cyan-400 bg-clip-text text-transparent font-black dark:drop-shadow-[0_0_25px_rgba(6,182,212,0.5)]">
-                  Ilham Fazril
+                  {profile.name || 'Ilham Fazril'}
                 </span>
               </h1>
               <p className="text-base sm:text-lg font-medium text-stone-800 dark:text-stone-100 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Membangun website modern yang elegan, cepat diakses di smartphone, dan terhubung dengan inovasi <strong className="font-bold text-cyan-600 dark:text-cyan-300">Kartu Pintar NFC 13.56 MHz</strong> untuk kemudahan berbagi profil secara nirsentuh.
+                {profile.tagline || 'Membangun website modern yang elegan, cepat diakses di smartphone, dan terhubung dengan inovasi Kartu Pintar NFC 13.56 MHz untuk kemudahan berbagi profil secara nirsentuh.'}
               </p>
             </div>
 
@@ -85,10 +88,10 @@ export const HeroSection: React.FC = () => {
 
               <button
                 id="hero-quick-guide-btn"
-                onClick={() => handleScrollTo('quick-guide')}
+                onClick={() => handleScrollTo('contact')}
                 className="px-5 sm:px-6 py-3.5 rounded-xl border border-stone-300 dark:border-stone-800 hover:border-cyan-500/60 bg-stone-100/90 dark:bg-stone-900/80 backdrop-blur-md text-black dark:text-stone-200 font-bold text-sm hover:text-cyan-600 dark:hover:text-cyan-300 transition-all cursor-pointer flex items-center gap-2 shadow-xs"
               >
-                <span>💡 Panduan Cara Kerja</span>
+                <span>Hubungi Saya</span>
               </button>
 
               {/* NFC Quick Sensor Trigger */}
@@ -111,7 +114,7 @@ export const HeroSection: React.FC = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 size={14} className="text-cyan-500 shrink-0" />
-                <span>Desain Elegan Hitam & Putih</span>
+                <span>Desain Elegan & Responsif</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 size={14} className="text-cyan-500 shrink-0" />
@@ -121,83 +124,122 @@ export const HeroSection: React.FC = () => {
 
           </div>
 
-          {/* Luxury Visual Holographic Card / Interactive Showcase */}
+          {/* Right Column: Luxury Portrait Card & Real Profile Showcase (5 Columns) */}
           <div className="lg:col-span-5 flex justify-center w-full">
-            <div className="relative w-full max-w-md">
+            <div className="relative w-full max-w-md group">
               
-              {/* Cyber Cyan Glow Ring */}
-              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-cyan-500/30 via-blue-500/20 to-cyan-500/30 opacity-60 blur-lg group-hover:opacity-90 transition duration-500 pointer-events-none" />
+              {/* Luxury Cyan Subtle Glow */}
+              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-cyan-500/30 via-blue-500/20 to-cyan-500/30 opacity-70 blur-xl group-hover:opacity-100 transition duration-700 pointer-events-none" />
               
-              <div className="relative rounded-3xl bg-black border border-cyan-500/40 p-5 sm:p-7 backdrop-blur-2xl shadow-2xl text-white space-y-5">
+              {/* Card Container */}
+              <div className="relative rounded-3xl bg-stone-950/95 border border-cyan-500/40 p-5 sm:p-6 backdrop-blur-2xl shadow-2xl text-white space-y-5 overflow-hidden">
                 
-                {/* Header of the Card */}
-                <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-400 p-[1.5px] shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                      <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center font-serif-luxury font-black text-cyan-300 text-xl">
-                        IF
+                {/* Photo & Identity Hero Block */}
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-stone-900 to-black border border-stone-800 shadow-inner">
+                  
+                  {/* Photo Section */}
+                  <div className="relative aspect-[4/4.5] sm:aspect-[4/4.8] w-full overflow-hidden flex items-center justify-center">
+                    {profile.photoUrl ? (
+                      <>
+                        <img
+                          src={profile.photoUrl}
+                          alt={profile.name || 'Ilham Fazril'}
+                          onLoad={() => setImageLoaded(true)}
+                          className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 ${
+                            imageLoaded ? 'opacity-100' : 'opacity-80 blur-xs'
+                          }`}
+                        />
+                        {/* Soft Gradient Overlay for text contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent pointer-events-none" />
+                      </>
+                    ) : (
+                      /* Elegant Monogram Fallback if no photo uploaded yet */
+                      <div className="relative w-full h-full flex flex-col items-center justify-center bg-radial from-cyan-950/40 via-stone-950 to-black p-6 text-center space-y-4">
+                        <div className="w-24 h-24 rounded-3xl bg-cyan-400 p-[2px] shadow-[0_0_30px_rgba(6,182,212,0.35)]">
+                          <div className="w-full h-full bg-stone-950 rounded-[22px] flex items-center justify-center font-serif-luxury font-black text-cyan-300 text-4xl">
+                            IF
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs font-mono-tech uppercase tracking-widest text-cyan-400 font-bold block">
+                            Developer Portrait
+                          </span>
+                          <p className="text-xs text-stone-400 font-mono-tech max-w-xs">
+                            Foto asli dapat di-upload kapan saja melalui menu &quot;Foto Profil & Identitas&quot; di Admin Panel.
+                          </p>
+                        </div>
                       </div>
+                    )}
+
+                    {/* Floating Status Badge Top-Right */}
+                    <div className="absolute top-3.5 right-3.5 z-10">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-mono-tech font-bold bg-black/80 backdrop-blur-md border border-cyan-400/40 text-cyan-300 flex items-center gap-1.5 shadow-lg">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                        </span>
+                        <span>ONLINE</span>
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-serif-luxury font-black text-lg sm:text-xl text-white tracking-wider">
-                        ILHAM FAZRIL
-                      </h3>
-                      <p className="text-xs font-mono-tech text-cyan-400 font-semibold">
-                        ID: DEV-ARCHITECT-999
+
+                    {/* Floating Location Badge Top-Left */}
+                    <div className="absolute top-3.5 left-3.5 z-10">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-mono-tech font-medium bg-black/80 backdrop-blur-md border border-stone-800 text-stone-300 flex items-center gap-1.5 shadow-lg">
+                        <MapPin size={12} className="text-cyan-400" />
+                        <span>{profile.location || 'Cimahi, Indonesia'}</span>
+                      </span>
+                    </div>
+
+                    {/* Bottom Floating Info Overlay */}
+                    <div className="absolute bottom-3 left-3 right-3 p-3.5 rounded-xl bg-stone-950/90 backdrop-blur-md border border-stone-800/80 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-serif-luxury font-black text-base sm:text-lg text-white tracking-wide">
+                          {profile.name || 'ILHAM FAZRIL'}
+                        </h3>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono-tech font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                          PRO
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono-tech text-cyan-400 font-semibold truncate">
+                        {profile.headlineRole || 'Full-Stack Web Developer & NFC'}
                       </p>
                     </div>
-                  </div>
 
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono-tech uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-400/40 font-bold">
-                    ONLINE
-                  </span>
-                </div>
-
-                {/* Specs / Quick Metrics */}
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                  <div className="p-3 rounded-xl bg-stone-950 border border-stone-800 hover:border-cyan-500/40 transition-colors">
-                    <span className="text-[11px] text-stone-300 block">Karier Developer</span>
-                    <span className="text-lg sm:text-xl font-bold font-serif-luxury text-cyan-300">3+ Tahun</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-stone-950 border border-stone-800 hover:border-cyan-500/40 transition-colors">
-                    <span className="text-[11px] text-stone-300 block">Tingkat Keberhasilan</span>
-                    <span className="text-lg sm:text-xl font-bold font-serif-luxury text-emerald-400">100% On-Time</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-stone-950 border border-stone-800 hover:border-cyan-500/40 transition-colors">
-                    <span className="text-[11px] text-stone-300 block">Spesialisasi</span>
-                    <span className="text-xs sm:text-sm font-semibold text-stone-100 truncate">Web NFC 13.56 MHz</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-stone-950 border border-stone-800 hover:border-cyan-500/40 transition-colors">
-                    <span className="text-[11px] text-stone-300 block">Security Stack</span>
-                    <span className="text-xs sm:text-sm font-semibold text-stone-100 truncate">Zero-Trust Protocol</span>
                   </div>
                 </div>
 
-                {/* Simulated Terminal Status Line */}
-                <div className="p-3 rounded-xl bg-black border border-cyan-950 font-mono-tech text-xs space-y-1">
-                  <div className="flex items-center justify-between text-stone-400 text-[11px]">
-                    <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-                      <Terminal size={13} />
-                      sys_telemetry.bin
+                {/* Real Highlights Grid (No Gimmick) */}
+                <div className="grid grid-cols-3 gap-2.5 text-center">
+                  <div className="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800/80 hover:border-cyan-500/40 transition-colors">
+                    <span className="text-[10px] text-stone-400 block font-mono-tech">Pengalaman</span>
+                    <span className="text-base sm:text-lg font-bold font-serif-luxury text-cyan-300">
+                      {profile.yearsOfExp || '3+ Tahun'}
                     </span>
-                    <span className="text-[10px] text-stone-500">STANDBY</span>
                   </div>
-                  <p className="text-stone-300 truncate">
-                    <span className="text-cyan-400">$</span> nfc_daemon: <span className="text-cyan-300">LISTENING [13.56 MHz]</span>
-                  </p>
-                  <p className="text-stone-400 truncate text-[11px]">
-                    <span className="text-cyan-400">$</span> auto_login_url: <span className="text-stone-300">ENABLED</span>
-                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800/80 hover:border-cyan-500/40 transition-colors">
+                    <span className="text-[10px] text-stone-400 block font-mono-tech">Proyek</span>
+                    <span className="text-base sm:text-lg font-bold font-serif-luxury text-stone-100">
+                      {profile.projectsCompleted || '12+'}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-stone-900/90 border border-stone-800/80 hover:border-cyan-500/40 transition-colors">
+                    <span className="text-[10px] text-stone-400 block font-mono-tech">Komitmen</span>
+                    <span className="text-base sm:text-lg font-bold font-serif-luxury text-emerald-400">
+                      {profile.satisfactionRate || '100%'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* NFC Tap Card Prompt Button inside Card */}
                 <button
-                  id="hologram-nfc-tap-action"
+                  id="portrait-nfc-tap-action"
                   onClick={handleNfcQuickTrigger}
-                  className="w-full py-3 rounded-xl border border-cyan-500/40 bg-stone-950 hover:bg-cyan-500 hover:text-black text-cyan-300 font-mono-tech text-xs uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="w-full py-3 rounded-xl border border-cyan-500/40 bg-stone-900/80 hover:bg-cyan-500 hover:text-black text-cyan-300 font-mono-tech text-xs uppercase tracking-wider font-bold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <Radio size={16} />
-                  <span>Autentikasi Kartu NFC 13.56 MHz</span>
+                  <span>Simulasi Tap Kartu NFC 13.56 MHz</span>
                 </button>
 
               </div>

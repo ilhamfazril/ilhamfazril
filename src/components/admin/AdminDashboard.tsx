@@ -8,6 +8,7 @@ import { ProjectManager } from './ProjectManager';
 import { InquiriesManager } from './InquiriesManager';
 import { BroadcastManager } from './BroadcastManager';
 import { CyberTerminal } from './CyberTerminal';
+import { ProfileSettingsManager } from './ProfileSettingsManager';
 import { 
   BarChart3, 
   Share2, 
@@ -28,11 +29,12 @@ import {
   CheckCircle2,
   ExternalLink,
   Lock,
-  Megaphone
+  Megaphone,
+  UserCheck
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
-type AdminTab = 'overview' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'projects' | 'inquiries' | 'terminal';
+type AdminTab = 'overview' | 'profile' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'projects' | 'inquiries' | 'terminal';
 
 export const AdminDashboard: React.FC = () => {
   const { 
@@ -74,6 +76,7 @@ export const AdminDashboard: React.FC = () => {
 
   const navItems = [
     { id: 'overview', label: 'Ringkasan & Analitik', icon: <BarChart3 size={18} /> },
+    { id: 'profile', label: 'Foto Profil & Identitas', icon: <UserCheck size={18} />, badge: 'Hero' },
     { id: 'broadcast', label: 'Siaran Pengumuman', icon: <Megaphone size={18} />, badge: `${announcements.filter(a => a.active).length} Live` },
     { id: 'socials', label: 'Kendali Media Sosial', icon: <Share2 size={18} />, badge: `${socials.filter(s => s.active).length} Aktif` },
     { id: 'nfc', label: 'NFC Card 13.56 MHz', icon: <Radio size={18} />, badge: `${nfcCards.length} Kartu` },
@@ -261,25 +264,40 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Quick Actions Shortcuts */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <button
+                  onClick={() => handleTabSelect('profile')}
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-cyan-500/20 hover:border-cyan-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                    <UserCheck size={18} />
+                  </div>
+                  <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-cyan-400">
+                    Upload Foto Profil
+                  </h3>
+                  <p className="text-xs text-stone-400 font-mono-tech">
+                    Pasang foto profil asli di layar Hero dan kelola identitas.
+                  </p>
+                </button>
+
                 <button
                   onClick={() => handleTabSelect('socials')}
-                  className="p-6 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
                     <Share2 size={18} />
                   </div>
                   <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-amber-400">
-                    Kelola Kontak Media Sosial
+                    Kelola Media Sosial
                   </h3>
                   <p className="text-xs text-stone-400 font-mono-tech">
-                    Ganti nomor WhatsApp, edit link Instagram, atau tambahkan tautan baru.
+                    Ganti nomor WhatsApp, edit link Instagram, atau link baru.
                   </p>
                 </button>
 
                 <button
                   onClick={() => handleTabSelect('nfc')}
-                  className="p-6 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
                     <Radio size={18} />
@@ -288,22 +306,22 @@ export const AdminDashboard: React.FC = () => {
                     NFC Card Manager
                   </h3>
                   <p className="text-xs text-stone-400 font-mono-tech">
-                    Tautkan kartu fisik baru dengan Web NFC API dan suntikkan token otentikasi.
+                    Tautkan kartu fisik baru dengan Web NFC API 13.56 MHz.
                   </p>
                 </button>
 
                 <button
                   onClick={() => handleTabSelect('qr-print')}
-                  className="p-6 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
                     <QrCode size={18} />
                   </div>
                   <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-amber-400">
-                    Generate QR & Cetak Pass
+                    Generate QR Pass
                   </h3>
                   <p className="text-xs text-stone-400 font-mono-tech">
-                    Hasilkan QR Token dan cetak kartu dompet fisik resmi developer.
+                    Hasilkan QR Token dan cetak kartu dompet fisik resmi.
                   </p>
                 </button>
               </div>
@@ -319,6 +337,9 @@ export const AdminDashboard: React.FC = () => {
 
             </div>
           )}
+
+          {/* TAB: PROFILE & PHOTO SETTINGS */}
+          {activeTab === 'profile' && <ProfileSettingsManager />}
 
           {/* TAB: BROADCAST / PENGUMUMAN PENGUNJUNG */}
           {activeTab === 'broadcast' && <BroadcastManager />}

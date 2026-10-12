@@ -12,7 +12,8 @@ import {
   AnalyticsData, 
   AuthMethod,
   EducationItem,
-  AnnouncementItem
+  AnnouncementItem,
+  ProfileConfig
 } from '../types';
 import { 
   INITIAL_SOCIALS, 
@@ -21,7 +22,8 @@ import {
   INITIAL_NFC_CARDS, 
   INITIAL_ANALYTICS,
   INITIAL_EDUCATION,
-  INITIAL_ANNOUNCEMENTS
+  INITIAL_ANNOUNCEMENTS,
+  INITIAL_PROFILE
 } from '../data/initialData';
 import { sound } from '../utils/soundEffects';
 import { DEV_SECRET_NFC_PAYLOAD, DEV_SECRET_QR_PAYLOAD } from '../utils/nfcAndQr';
@@ -120,6 +122,11 @@ interface PortfolioContextType {
   trackProjectClick: (id: string) => void;
   trackContactClick: (platformName: string) => void;
   trackNfcTap: () => void;
+
+  // Profile Settings
+  profile: ProfileConfig;
+  updateProfile: (updated: Partial<ProfileConfig>) => void;
+  resetProfile: () => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
@@ -135,6 +142,7 @@ const LOCAL_STORAGE_KEYS = {
   INQUIRIES: 'ilham_portfolio_inquiries',
   ANALYTICS: 'ilham_portfolio_analytics',
   SOUND: 'ilham_portfolio_sound',
+  PROFILE: 'ilham_portfolio_profile',
 };
 
 const getStoredItem = (key: string): string | null => {
@@ -329,6 +337,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return INITIAL_ANALYTICS;
   });
 
+  // Profile Configuration State
+  const [profile, setProfile] = useState<ProfileConfig>(() => {
+    const saved = getStoredItem(LOCAL_STORAGE_KEYS.PROFILE);
+    if (saved) {
+      try {
+        return { ...INITIAL_PROFILE, ...JSON.parse(saved) };
+      } catch {}
+    }
+    return INITIAL_PROFILE;
+  });
+
   // Sync theme to DOM
   useEffect(() => {
     const root = document.documentElement;
@@ -380,6 +399,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH, JSON.stringify(auth));
   }, [auth]);
+
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+  }, [profile]);
 
   // Zero-Touch NFC Auto-Launch URL Detection (Phone Tap when unlocked opens website and triggers instant login modal)
   useEffect(() => {
@@ -719,6 +742,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setAnalytics(prev => ({ ...prev, nfcTaps: prev.nfcTaps + 1 }));
   };
 
+  // Profile Management Actions
+  const updateProfile = (updated: Partial<ProfileConfig>) => {
+    sound.playSuccess();
+    setProfile(prev => ({ ...prev, ...updated }));
+  };
+
+  const resetProfile = () => {
+    sound.playClick();
+    setProfile(INITIAL_PROFILE);
+  };
+
   return (
     <PortfolioContext.Provider
       value={{
@@ -788,6 +822,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         trackProjectClick,
         trackContactClick,
         trackNfcTap,
+        profile,
+        updateProfile,
+        resetProfile,
       }}
     >
       {children}

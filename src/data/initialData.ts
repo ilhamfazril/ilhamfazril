@@ -1,4 +1,17 @@
-import { SocialPlatform, Project, SkillItem, NfcCardRecord, AnalyticsData, EducationItem, AnnouncementItem } from '../types';
+import { SocialPlatform, Project, SkillItem, NfcCardRecord, AnalyticsData, EducationItem, AnnouncementItem, ProfileConfig } from '../types';
+
+export const INITIAL_PROFILE: ProfileConfig = {
+  name: 'Ilham Fazril',
+  headlineRole: 'Full-Stack Developer & NFC Hardware Specialist',
+  tagline: 'Membangun ekosistem web ultra-modern, performa tinggi, dan terintegrasi kartu pintar nirsentuh.',
+  location: 'Cimahi, Indonesia',
+  statusBadge: 'Tersedia untuk Proyek & Kolaborasi',
+  photoUrl: '', // Default empty so monogram IF is elegantly displayed until Ilham uploads his photo
+  yearsOfExp: '3+ Tahun',
+  projectsCompleted: '12+',
+  satisfactionRate: '100% On-Time',
+  bioShort: 'Fokus pada arsitektur web modern yang bersih, cepat, terintegrasi IoT/NFC, dan berorientasi pada kepuasan pengguna nyata.',
+};
 
 export const INITIAL_EDUCATION: EducationItem[] = [
   {
