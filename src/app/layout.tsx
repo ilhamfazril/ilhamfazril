@@ -142,7 +142,7 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark">
       <head />
-      <body className="bg-stone-950 text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-200 min-h-screen">
+      <body className="bg-black text-stone-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen">
         <script
           key="schema-jsonld"
           id="schema-jsonld"
