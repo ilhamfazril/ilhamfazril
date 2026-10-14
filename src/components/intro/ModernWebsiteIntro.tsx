@@ -8,8 +8,7 @@ import {
   Layers, 
   Volume2,
   CheckCircle2,
-  Loader2,
-  ArrowRight
+  Loader2
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
@@ -117,15 +116,6 @@ export const ModernWebsiteIntro: React.FC = () => {
     };
   }, [showWebsiteIntro, isDismissed, safeScrollToTop, triggerDismiss]);
 
-  const handleManualSkip = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      sound.playClick();
-    } catch {}
-    triggerDismiss();
-  };
-
   if (!showWebsiteIntro || isDismissed) {
     return null;
   }
@@ -133,11 +123,10 @@ export const ModernWebsiteIntro: React.FC = () => {
   return (
     <div
       id="modern-website-intro-overlay"
-      onClick={handleManualSkip}
-      className={`fixed inset-0 z-[9999] bg-black text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden select-none cursor-pointer transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[9999] bg-black text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden select-none cursor-default transition-opacity duration-300 ${
         isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
       }`}
-      aria-label="Animasi Pembuka - Klik di mana saja untuk melewati intro"
+      aria-label="Animasi Pembuka Website Ilham Fazril"
     >
       {/* Background Cyber Grid & Ambient Glows */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d40f_1px,transparent_1px),linear-gradient(to_bottom,#06b6d40f_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
@@ -221,20 +210,12 @@ export const ModernWebsiteIntro: React.FC = () => {
           </div>
         </div>
 
-        {/* Loading Footer Info & Skip Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full pt-1">
-          <span className="text-[11px] font-mono-tech text-stone-400 text-center sm:text-left">
-            Otomatis masuk atau klik layar
-          </span>
-          <button
-            type="button"
-            onClick={handleManualSkip}
-            onTouchEnd={handleManualSkip}
-            className="group relative z-30 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono-tech font-bold text-xs shadow-lg shadow-cyan-500/30 transition-all transform active:scale-95 cursor-pointer flex items-center gap-1.5"
-          >
-            <span>Lewati Intro</span>
-            <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
-          </button>
+        {/* System Auto-Launch Status Indicator */}
+        <div className="flex items-center justify-center w-full pt-1">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/40 border border-cyan-500/25 text-[11px] font-mono-tech text-cyan-300">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span>Memuat sistem secara otomatis...</span>
+          </div>
         </div>
 
       </div>

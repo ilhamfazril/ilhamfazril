@@ -65,6 +65,7 @@ export interface EducationItem {
   iconType: 'preschool' | 'kindergarten' | 'elementary' | 'junior' | 'vocational' | 'internship';
   badge?: string;
   credentialUrl?: string;
+  image?: string; // Foto instansi, gedung, kegiatan, atau sertifikat
 }
 
 export interface AnnouncementItem {

@@ -24,6 +24,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Stimulasi Motorik & Sensorik', 'Sosialisasi Dini', 'Eksplorasi Kreativitas'],
     iconType: 'preschool',
     badge: 'Fondasi Awal Pembelajaran',
+    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'edu-2',
@@ -35,6 +36,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Literasi Visual Awal', 'Pengenalan Angka & Simbol', 'Pendidikan Karakter & Moral'],
     iconType: 'kindergarten',
     badge: 'Fondasi Karakter & Literasi',
+    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'edu-3',
@@ -46,6 +48,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Penalaran Logika & Berhitung', 'Literasi & Karakter Mandiri', 'Kreativitas & Kolaborasi'],
     iconType: 'elementary',
     badge: 'Pendidikan Dasar Berkarakter',
+    image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'edu-4',
@@ -57,6 +60,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Logika Algoritmik', 'Sains Terapan', 'Kepemimpinan & Organisasi', 'Bahasa & Analitika'],
     iconType: 'junior',
     badge: 'Eksplorasi Sains & Komputer',
+    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'edu-5',
@@ -68,6 +72,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Teknik Komputer & Jaringan (TKJ)', 'Sistem Telekomunikasi & Frekuensi Radio', 'Elektronika & Arsitektur Hardware', 'Disiplin Tinggi & Leadership'],
     iconType: 'vocational',
     badge: 'Fondasi Utama Rekayasa Komputer & Jaringan',
+    image: 'https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'edu-6',
@@ -79,6 +84,7 @@ export const INITIAL_EDUCATION: EducationItem[] = [
     skillsFocus: ['Manajemen Basis Data Sosial', 'Verifikasi Sistem Informasi Dayasos', 'Infrastruktur Jaringan Pemerintahan', 'Integritas & Pelayanan Publik'],
     iconType: 'internship',
     badge: 'Pengalaman Industri & Pemerintahan',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
   },
 ];
 

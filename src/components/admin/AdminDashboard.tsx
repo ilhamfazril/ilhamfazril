@@ -9,6 +9,7 @@ import { InquiriesManager } from './InquiriesManager';
 import { BroadcastManager } from './BroadcastManager';
 import { CyberTerminal } from './CyberTerminal';
 import { ProfileSettingsManager } from './ProfileSettingsManager';
+import { EducationManager } from './EducationManager';
 import { 
   BarChart3, 
   Share2, 
@@ -30,11 +31,12 @@ import {
   ExternalLink,
   Lock,
   Megaphone,
-  UserCheck
+  UserCheck,
+  GraduationCap
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
-type AdminTab = 'overview' | 'profile' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'projects' | 'inquiries' | 'terminal';
+type AdminTab = 'overview' | 'profile' | 'education' | 'projects' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'inquiries' | 'terminal';
 
 export const AdminDashboard: React.FC = () => {
   const { 
@@ -46,6 +48,7 @@ export const AdminDashboard: React.FC = () => {
     analytics, 
     socials, 
     projects, 
+    education,
     nfcCards, 
     inquiries,
     announcements
@@ -77,11 +80,12 @@ export const AdminDashboard: React.FC = () => {
   const navItems = [
     { id: 'overview', label: 'Ringkasan & Analitik', icon: <BarChart3 size={18} /> },
     { id: 'profile', label: 'Foto Profil & Identitas', icon: <UserCheck size={18} />, badge: 'Hero' },
+    { id: 'education', label: 'Riwayat Pendidikan', icon: <GraduationCap size={18} />, badge: `${education.length} Tingkat` },
+    { id: 'projects', label: 'Manajemen Proyek', icon: <Layers size={18} />, badge: `${projects.length}` },
     { id: 'broadcast', label: 'Siaran Pengumuman', icon: <Megaphone size={18} />, badge: `${announcements.filter(a => a.active).length} Live` },
     { id: 'socials', label: 'Kendali Media Sosial', icon: <Share2 size={18} />, badge: `${socials.filter(s => s.active).length} Aktif` },
     { id: 'nfc', label: 'NFC Card 13.56 MHz', icon: <Radio size={18} />, badge: `${nfcCards.length} Kartu` },
     { id: 'qr-print', label: 'Generate QR & Cetak Pass', icon: <QrCode size={18} /> },
-    { id: 'projects', label: 'Manajemen Proyek', icon: <Layers size={18} />, badge: `${projects.length}` },
     { id: 'inquiries', label: 'Pesan Masuk (Inbox)', icon: <Mail size={18} />, badge: inquiries.some(i => !i.read) ? 'Baru' : undefined },
     { id: 'terminal', label: 'Cyber Terminal', icon: <Terminal size={18} /> },
   ];
@@ -264,7 +268,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Quick Actions Shortcuts */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => handleTabSelect('profile')}
                   className="p-5 rounded-2xl bg-stone-900/60 border border-cyan-500/20 hover:border-cyan-500/50 text-left space-y-2 transition-all cursor-pointer group"
@@ -273,10 +277,40 @@ export const AdminDashboard: React.FC = () => {
                     <UserCheck size={18} />
                   </div>
                   <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-cyan-400">
-                    Upload Foto Profil
+                    Foto Profil & Hero
                   </h3>
                   <p className="text-xs text-stone-400 font-mono-tech">
                     Pasang foto profil asli di layar Hero dan kelola identitas.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => handleTabSelect('education')}
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-cyan-500/20 hover:border-cyan-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                    <GraduationCap size={18} />
+                  </div>
+                  <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-cyan-400">
+                    Riwayat Pendidikan & Foto
+                  </h3>
+                  <p className="text-xs text-stone-400 font-mono-tech">
+                    Upload foto sekolah, kegiatan PKL, sertifikat, & ijazah.
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => handleTabSelect('projects')}
+                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                    <Layers size={18} />
+                  </div>
+                  <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-amber-400">
+                    Manajemen Proyek & Foto
+                  </h3>
+                  <p className="text-xs text-stone-400 font-mono-tech">
+                    Upload screenshot/banner proyek, kelola live URL & repo.
                   </p>
                 </button>
 
@@ -292,36 +326,6 @@ export const AdminDashboard: React.FC = () => {
                   </h3>
                   <p className="text-xs text-stone-400 font-mono-tech">
                     Ganti nomor WhatsApp, edit link Instagram, atau link baru.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => handleTabSelect('nfc')}
-                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                    <Radio size={18} />
-                  </div>
-                  <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-amber-400">
-                    NFC Card Manager
-                  </h3>
-                  <p className="text-xs text-stone-400 font-mono-tech">
-                    Tautkan kartu fisik baru dengan Web NFC API 13.56 MHz.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => handleTabSelect('qr-print')}
-                  className="p-5 rounded-2xl bg-stone-900/60 border border-amber-500/20 hover:border-amber-500/50 text-left space-y-2 transition-all cursor-pointer group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                    <QrCode size={18} />
-                  </div>
-                  <h3 className="font-serif-luxury font-bold text-base text-stone-100 group-hover:text-amber-400">
-                    Generate QR Pass
-                  </h3>
-                  <p className="text-xs text-stone-400 font-mono-tech">
-                    Hasilkan QR Token dan cetak kartu dompet fisik resmi.
                   </p>
                 </button>
               </div>
@@ -341,6 +345,12 @@ export const AdminDashboard: React.FC = () => {
           {/* TAB: PROFILE & PHOTO SETTINGS */}
           {activeTab === 'profile' && <ProfileSettingsManager />}
 
+          {/* TAB: EDUCATION MANAGER WITH PHOTO UPLOADS */}
+          {activeTab === 'education' && <EducationManager />}
+
+          {/* TAB: PROJECT MANAGER WITH PHOTO UPLOADS */}
+          {activeTab === 'projects' && <ProjectManager />}
+
           {/* TAB: BROADCAST / PENGUMUMAN PENGUNJUNG */}
           {activeTab === 'broadcast' && <BroadcastManager />}
 
@@ -352,9 +362,6 @@ export const AdminDashboard: React.FC = () => {
 
           {/* TAB 4: QR CODE GENERATOR & PRINT PASS */}
           {activeTab === 'qr-print' && <GenerateQrAndPrintPass />}
-
-          {/* TAB 5: PROJECT MANAGER */}
-          {activeTab === 'projects' && <ProjectManager />}
 
           {/* TAB 6: INQUIRIES / INBOX */}
           {activeTab === 'inquiries' && <InquiriesManager />}

@@ -86,12 +86,14 @@ interface PortfolioContextType {
   addProject: (proj: Omit<Project, 'id'>) => void;
   updateProject: (id: string, updated: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+  resetProjects: () => void;
 
   // Education History
   education: EducationItem[];
   addEducation: (edu: Omit<EducationItem, 'id'>) => void;
   updateEducation: (id: string, updated: Partial<EducationItem>) => void;
   deleteEducation: (id: string) => void;
+  resetEducation: () => void;
 
   // Announcements & Floating Broadcast
   announcements: AnnouncementItem[];
@@ -642,6 +644,11 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setProjects(prev => prev.filter(p => p.id !== id));
   };
 
+  const resetProjects = () => {
+    sound.playClick();
+    setProjects(INITIAL_PROJECTS);
+  };
+
   // Education Actions
   const addEducation = (data: Omit<EducationItem, 'id'>) => {
     sound.playSuccess();
@@ -660,6 +667,11 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const deleteEducation = (id: string) => {
     sound.playClick();
     setEducation(prev => prev.filter(e => e.id !== id));
+  };
+
+  const resetEducation = () => {
+    sound.playClick();
+    setEducation(INITIAL_EDUCATION);
   };
 
   // Announcements Actions
@@ -798,10 +810,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addProject,
         updateProject,
         deleteProject,
+        resetProjects,
         education,
         addEducation,
         updateEducation,
         deleteEducation,
+        resetEducation,
         announcements,
         addAnnouncement,
         updateAnnouncement,
