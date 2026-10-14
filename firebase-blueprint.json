@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "Portfolio project item",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "shortDesc": { "type": "string" },
+        "fullDesc": { "type": "string" },
+        "tags": { "type": "string" },
+        "image": { "type": "string" },
+        "demoUrl": { "type": "string" },
+        "githubUrl": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "architecture": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "category", "shortDesc"]
+    },
+    "EducationItem": {
+      "title": "EducationItem",
+      "description": "Educational background and internship experience",
+      "type": "object",
+      "properties": {
+        "institution": { "type": "string" },
+        "level": { "type": "string" },
+        "location": { "type": "string" },
+        "period": { "type": "string" },
+        "description": { "type": "string" },
+        "skillsFocus": { "type": "string" },
+        "iconType": { "type": "string" },
+        "badge": { "type": "string" },
+        "image": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["institution", "level", "period"]
+    },
+    "ProfileConfig": {
+      "title": "ProfileConfig",
+      "description": "Developer profile and settings",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "headline": { "type": "string" },
+        "bio": { "type": "string" },
+        "avatar": { "type": "string" },
+        "location": { "type": "string" },
+        "status": { "type": "string" },
+        "resumeUrl": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "headline"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Broadcast news and announcements",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "date": { "type": "string" },
+        "category": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "content"]
+    },
+    "MessageInquiry": {
+      "title": "MessageInquiry",
+      "description": "Contact form submissions from visitors",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["name", "email", "message"]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Portfolio projects collection"
+    },
+    "/education/{educationId}": {
+      "schema": "EducationItem",
+      "description": "Education and internship history collection"
+    },
+    "/profile/{profileId}": {
+      "schema": "ProfileConfig",
+      "description": "Profile settings document"
+    },
+    "/broadcasts/{broadcastId}": {
+      "schema": "Announcement",
+      "description": "Announcements collection"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "MessageInquiry",
+      "description": "Contact form messages collection"
+    }
+  }
+}

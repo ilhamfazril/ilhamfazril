@@ -373,7 +373,7 @@ export const ProfileSettingsManager: React.FC = () => {
                 {isSaved && (
                   <span className="text-emerald-400 font-mono-tech text-xs flex items-center gap-1 font-bold animate-in fade-in">
                     <CheckCircle2 size={15} />
-                    <span>Perubahan Berhasil Disimpan!</span>
+                    <span>Tersimpan ke Firebase &amp; Realtime!</span>
                   </span>
                 )}
                 <button

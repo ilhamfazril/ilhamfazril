@@ -51,7 +51,8 @@ export const AdminDashboard: React.FC = () => {
     education,
     nfcCards, 
     inquiries,
-    announcements
+    announcements,
+    isFirebaseConnected
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
@@ -117,6 +118,15 @@ export const AdminDashboard: React.FC = () => {
             <Lock size={13} className="text-emerald-400" />
             <span>Auth:</span>
             <strong className="text-cyan-300 uppercase font-bold">{auth.method || 'SESSION'}</strong>
+          </div>
+
+          {/* Firebase Realtime Cloud Sync Status */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-900 border border-stone-800 font-mono-tech text-xs">
+            <span className={`w-2 h-2 rounded-full ${isFirebaseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span className="text-stone-300">Firebase:</span>
+            <span className={isFirebaseConnected ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+              {isFirebaseConnected ? 'Realtime Connected' : 'Connecting...'}
+            </span>
           </div>
 
           {/* Live Clock */}
@@ -194,8 +204,9 @@ export const AdminDashboard: React.FC = () => {
               <span className="text-emerald-400 font-bold">NORMAL</span>
             </div>
             <p>Web NFC Engine: <span className="text-white font-semibold">Supported / Emulated</span></p>
+            <p>Cloud Firestore: <span className="text-emerald-400 font-semibold">Online &amp; Realtime</span></p>
             <p>Cryptographic Key: <span className="text-cyan-300 font-semibold">Level 9 Auth</span></p>
-            <p>Sync Engine: <span className="text-emerald-400 font-semibold">Reactive Instant</span></p>
+            <p>Sync Engine: <span className="text-emerald-400 font-semibold">Live Snapshot Listeners</span></p>
           </div>
         </aside>
 

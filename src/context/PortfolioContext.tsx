@@ -27,8 +27,19 @@ import {
 } from '../data/initialData';
 import { sound } from '../utils/soundEffects';
 import { DEV_SECRET_NFC_PAYLOAD, DEV_SECRET_QR_PAYLOAD } from '../utils/nfcAndQr';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  onSnapshot 
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface PortfolioContextType {
+  // Firebase Realtime
+  isFirebaseConnected: boolean;
+
   // Theme
   theme: ThemeMode;
   toggleTheme: () => void;
@@ -350,6 +361,143 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return INITIAL_PROFILE;
   });
 
+  // Firebase Realtime Connection State
+  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(false);
+
+  // Helper to remove any undefined values before writing to Firestore
+  const cleanPayload = <T extends Record<string, any>>(obj: T): Record<string, any> => {
+    const result: Record<string, any> = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (val !== undefined) {
+        result[key] = val;
+      }
+    }
+    return result;
+  };
+
+  // Real-Time Firebase Firestore Synchronization
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let isMounted = true;
+
+    // 1. Profile real-time listener
+    const unsubProfile = onSnapshot(
+      doc(db, 'profile', 'main'),
+      (snap) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (snap.exists()) {
+          const data = snap.data() as ProfileConfig;
+          setProfile(prev => ({ ...prev, ...data }));
+        } else {
+          setDoc(doc(db, 'profile', 'main'), cleanPayload(INITIAL_PROFILE)).catch(() => {});
+        }
+      },
+      (err) => {
+        console.warn('Firestore profile sync fallback:', err);
+      }
+    );
+
+    // 2. Projects real-time listener
+    const unsubProjects = onSnapshot(
+      collection(db, 'projects'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteProjects: Project[] = [];
+          snapshot.forEach((d) => {
+            remoteProjects.push({ id: d.id, ...(d.data() as Omit<Project, 'id'>) });
+          });
+          setProjects(remoteProjects);
+        } else {
+          INITIAL_PROJECTS.forEach((p) => {
+            setDoc(doc(db, 'projects', p.id), cleanPayload(p)).catch(() => {});
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firestore projects sync fallback:', err);
+      }
+    );
+
+    // 3. Education real-time listener
+    const unsubEducation = onSnapshot(
+      collection(db, 'education'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteEdu: EducationItem[] = [];
+          snapshot.forEach((d) => {
+            remoteEdu.push({ id: d.id, ...(d.data() as Omit<EducationItem, 'id'>) });
+          });
+          remoteEdu.sort((a, b) => {
+            const numA = parseInt(a.id.replace('edu-', ''), 10) || 0;
+            const numB = parseInt(b.id.replace('edu-', ''), 10) || 0;
+            return numA - numB;
+          });
+          setEducation(remoteEdu);
+        } else {
+          INITIAL_EDUCATION.forEach((e) => {
+            setDoc(doc(db, 'education', e.id), cleanPayload(e)).catch(() => {});
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firestore education sync fallback:', err);
+      }
+    );
+
+    // 4. Announcements real-time listener
+    const unsubBroadcasts = onSnapshot(
+      collection(db, 'broadcasts'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteAnn: AnnouncementItem[] = [];
+          snapshot.forEach((d) => {
+            remoteAnn.push({ id: d.id, ...(d.data() as Omit<AnnouncementItem, 'id'>) });
+          });
+          setAnnouncements(remoteAnn);
+        }
+      },
+      (err) => {
+        console.warn('Firestore broadcasts sync fallback:', err);
+      }
+    );
+
+    // 5. Inquiries real-time listener
+    const unsubInquiries = onSnapshot(
+      collection(db, 'inquiries'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteInq: MessageInquiry[] = [];
+          snapshot.forEach((d) => {
+            remoteInq.push({ id: d.id, ...(d.data() as Omit<MessageInquiry, 'id'>) });
+          });
+          setInquiries(remoteInq);
+        }
+      },
+      (err) => {
+        console.warn('Firestore inquiries sync fallback:', err);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      unsubProfile();
+      unsubProjects();
+      unsubEducation();
+      unsubBroadcasts();
+      unsubInquiries();
+    };
+  }, []);
+
   // Sync theme to DOM
   useEffect(() => {
     const root = document.documentElement;
@@ -627,77 +775,116 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Projects Actions
   const addProject = (data: Omit<Project, 'id'>) => {
     sound.playSuccess();
+    const id = `proj-${Date.now()}`;
     const newProj: Project = {
       ...data,
-      id: `proj-${Date.now()}`,
+      id,
     };
     setProjects(prev => [newProj, ...prev]);
+    setDoc(doc(db, 'projects', id), cleanPayload(newProj)).catch((err) => {
+      console.warn('Failed to sync added project to Firestore:', err);
+    });
   };
 
   const updateProject = (id: string, updated: Partial<Project>) => {
     sound.playClick();
     setProjects(prev => prev.map(p => (p.id === id ? { ...p, ...updated } : p)));
+    setDoc(doc(db, 'projects', id), cleanPayload(updated), { merge: true }).catch((err) => {
+      console.warn('Failed to sync updated project to Firestore:', err);
+    });
   };
 
   const deleteProject = (id: string) => {
     sound.playClick();
     setProjects(prev => prev.filter(p => p.id !== id));
+    deleteDoc(doc(db, 'projects', id)).catch((err) => {
+      console.warn('Failed to sync deleted project from Firestore:', err);
+    });
   };
 
   const resetProjects = () => {
     sound.playClick();
     setProjects(INITIAL_PROJECTS);
+    INITIAL_PROJECTS.forEach(p => {
+      setDoc(doc(db, 'projects', p.id), cleanPayload(p)).catch(() => {});
+    });
   };
 
   // Education Actions
   const addEducation = (data: Omit<EducationItem, 'id'>) => {
     sound.playSuccess();
+    const id = `edu-${Date.now()}`;
     const newEdu: EducationItem = {
       ...data,
-      id: `edu-${Date.now()}`,
+      id,
     };
     setEducation(prev => [newEdu, ...prev]);
+    setDoc(doc(db, 'education', id), cleanPayload(newEdu)).catch((err) => {
+      console.warn('Failed to sync added education to Firestore:', err);
+    });
   };
 
   const updateEducation = (id: string, updated: Partial<EducationItem>) => {
     sound.playClick();
     setEducation(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
+    setDoc(doc(db, 'education', id), cleanPayload(updated), { merge: true }).catch((err) => {
+      console.warn('Failed to sync updated education to Firestore:', err);
+    });
   };
 
   const deleteEducation = (id: string) => {
     sound.playClick();
     setEducation(prev => prev.filter(e => e.id !== id));
+    deleteDoc(doc(db, 'education', id)).catch((err) => {
+      console.warn('Failed to sync deleted education from Firestore:', err);
+    });
   };
 
   const resetEducation = () => {
     sound.playClick();
     setEducation(INITIAL_EDUCATION);
+    INITIAL_EDUCATION.forEach(e => {
+      setDoc(doc(db, 'education', e.id), cleanPayload(e)).catch(() => {});
+    });
   };
 
   // Announcements Actions
   const addAnnouncement = (data: Omit<AnnouncementItem, 'id' | 'createdAt'>) => {
     sound.playSuccess();
+    const id = `ann-${Date.now()}`;
     const newAnn: AnnouncementItem = {
       ...data,
-      id: `ann-${Date.now()}`,
+      id,
       createdAt: new Date().toLocaleString('id-ID'),
     };
     setAnnouncements(prev => [newAnn, ...prev]);
+    setDoc(doc(db, 'broadcasts', id), cleanPayload(newAnn)).catch((err) => {
+      console.warn('Failed to sync added announcement to Firestore:', err);
+    });
   };
 
   const updateAnnouncement = (id: string, updated: Partial<AnnouncementItem>) => {
     sound.playClick();
     setAnnouncements(prev => prev.map(a => (a.id === id ? { ...a, ...updated } : a)));
+    setDoc(doc(db, 'broadcasts', id), cleanPayload(updated), { merge: true }).catch((err) => {
+      console.warn('Failed to sync updated announcement to Firestore:', err);
+    });
   };
 
   const deleteAnnouncement = (id: string) => {
     sound.playClick();
     setAnnouncements(prev => prev.filter(a => a.id !== id));
+    deleteDoc(doc(db, 'broadcasts', id)).catch((err) => {
+      console.warn('Failed to sync deleted announcement from Firestore:', err);
+    });
   };
 
   const toggleAnnouncementActive = (id: string) => {
     sound.playClick();
-    setAnnouncements(prev => prev.map(a => (a.id === id ? { ...a, active: !a.active } : a)));
+    const target = announcements.find(a => a.id === id);
+    const nextActive = target ? !target.active : true;
+    setAnnouncements(prev => prev.map(a => (a.id === id ? { ...a, active: nextActive } : a)));
+    setDoc(doc(db, 'broadcasts', id), { active: nextActive }, { merge: true }).catch(() => {});
   };
 
   // NFC Card Management
@@ -721,24 +908,32 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Inquiries Actions
   const addInquiry = (inquiryData: Omit<MessageInquiry, 'id' | 'timestamp' | 'read' | 'status'>) => {
     sound.playSuccess();
+    const id = `inq-${Date.now()}`;
     const newInquiry: MessageInquiry = {
       ...inquiryData,
-      id: `inq-${Date.now()}`,
+      id,
       timestamp: new Date().toLocaleString('id-ID'),
       read: false,
       status: 'new',
     };
     setInquiries(prev => [newInquiry, ...prev]);
     setAnalytics(prev => ({ ...prev, contactClicks: prev.contactClicks + 1 }));
+    setDoc(doc(db, 'inquiries', id), cleanPayload(newInquiry)).catch((err) => {
+      console.warn('Failed to sync added inquiry to Firestore:', err);
+    });
   };
 
   const markInquiryRead = (id: string) => {
     setInquiries(prev => prev.map(inq => (inq.id === id ? { ...inq, read: true } : inq)));
+    setDoc(doc(db, 'inquiries', id), { read: true }, { merge: true }).catch(() => {});
   };
 
   const deleteInquiry = (id: string) => {
     sound.playClick();
     setInquiries(prev => prev.filter(inq => inq.id !== id));
+    deleteDoc(doc(db, 'inquiries', id)).catch((err) => {
+      console.warn('Failed to sync deleted inquiry from Firestore:', err);
+    });
   };
 
   // Trackers
@@ -758,16 +953,21 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateProfile = (updated: Partial<ProfileConfig>) => {
     sound.playSuccess();
     setProfile(prev => ({ ...prev, ...updated }));
+    setDoc(doc(db, 'profile', 'main'), cleanPayload(updated), { merge: true }).catch((err) => {
+      console.warn('Failed to sync profile update to Firestore:', err);
+    });
   };
 
   const resetProfile = () => {
     sound.playClick();
     setProfile(INITIAL_PROFILE);
+    setDoc(doc(db, 'profile', 'main'), cleanPayload(INITIAL_PROFILE)).catch(() => {});
   };
 
   return (
     <PortfolioContext.Provider
       value={{
+        isFirebaseConnected,
         theme,
         toggleTheme,
         viewMode,

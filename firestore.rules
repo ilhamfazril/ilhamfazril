@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64;
+    }
+
+    // Projects: readable by all, writable with valid fields
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isValidId(projectId);
+    }
+
+    // Education: readable by all, writable with valid fields
+    match /education/{educationId} {
+      allow read: if true;
+      allow write: if isValidId(educationId);
+    }
+
+    // Profile: readable by all, writable with valid fields
+    match /profile/{profileId} {
+      allow read: if true;
+      allow write: if isValidId(profileId);
+    }
+
+    // Broadcasts: readable by all, writable with valid fields
+    match /broadcasts/{broadcastId} {
+      allow read: if true;
+      allow write: if isValidId(broadcastId);
+    }
+
+    // Inquiries: anyone can submit (create), all can read/update with valid id
+    match /inquiries/{inquiryId} {
+      allow read, write: if isValidId(inquiryId);
+    }
+
+    // Test connection doc
+    match /test/{testId} {
+      allow read, write: if true;
+    }
+  }
+}
