@@ -77,95 +77,95 @@ export const EducationSection: React.FC = () => {
               key={item.id}
               id={`edu-item-${item.id}`}
               onMouseEnter={() => sound.playHover()}
-              className={`group relative p-6 sm:p-8 rounded-3xl backdrop-blur-xl border transition-all duration-300 shadow-xl hover:-translate-y-1 ${
+              className={`group relative p-5 sm:p-7 md:p-8 rounded-3xl backdrop-blur-xl border transition-all duration-300 shadow-xl hover:-translate-y-1 ${
                 item.iconType === 'internship' || item.iconType === 'vocational'
                   ? 'bg-stone-100/95 dark:bg-stone-900/80 border-cyan-500/40 dark:border-cyan-500/30 hover:border-cyan-500'
                   : 'bg-stone-100/80 dark:bg-stone-900/50 border-stone-200 dark:border-stone-800 hover:border-cyan-500/40'
               }`}
             >
-              <div className="flex flex-col lg:flex-row gap-6 lg:items-start justify-between">
-                
-                {/* Left: Icon & Core Details */}
-                <div className="flex items-start gap-4 sm:gap-6 flex-1">
-                  {/* Badge Icon */}
-                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all shadow-md">
+              {/* Photo placed ABOVE the school name */}
+              {item.image && (
+                <div 
+                  onClick={(e) => handleOpenLightbox(e, item.image!, item.institution)}
+                  className="relative group/photo w-full h-48 sm:h-60 md:h-72 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 hover:border-cyan-500/60 shadow-lg bg-stone-950 cursor-pointer transition-all duration-300 mb-6"
+                >
+                  <img
+                    src={item.image}
+                    alt={`Dokumentasi ${item.institution}`}
+                    className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500 opacity-95 group-hover/photo:opacity-100"
+                    loading="lazy"
+                  />
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-black/20 opacity-60 group-hover/photo:opacity-30 transition-opacity" />
+
+                  {/* Floating category icon badge */}
+                  <div className="absolute top-3 left-3 p-2.5 rounded-xl bg-black/75 backdrop-blur-md border border-white/10 text-cyan-400 shadow-md">
                     {getInstitutionIcon(item.iconType)}
                   </div>
 
-                  <div className="space-y-2.5 flex-1">
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono-tech font-bold text-cyan-600 dark:text-cyan-300 bg-cyan-500/10 border border-cyan-500/30">
-                        {item.period}
-                      </span>
-                      
-                      {item.badge && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono-tech font-bold bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-100 border border-stone-300 dark:border-stone-700">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-xl sm:text-2xl font-serif-luxury font-black text-stone-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
-                      {item.institution}
-                    </h3>
-
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono-tech text-stone-700 dark:text-stone-200">
-                      <span className="flex items-center gap-1 font-bold text-stone-900 dark:text-stone-100">
-                        <Award size={13} className="text-cyan-500" />
-                        {item.level}
-                      </span>
-                      <span className="flex items-center gap-1 text-stone-700 dark:text-stone-300 font-medium">
-                        <MapPin size={13} className="text-cyan-500" />
-                        {item.location}
-                      </span>
-                    </div>
-
-                    <p className="text-sm text-stone-800 dark:text-stone-100 font-normal leading-relaxed pt-1">
-                      {item.description}
-                    </p>
-
-                    {/* Skill Tags */}
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {item.skillsFocus.map((skill, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="px-2.5 py-1 rounded-lg text-xs font-mono-tech bg-stone-200 dark:bg-stone-950 text-stone-900 dark:text-cyan-300 border border-stone-300 dark:border-stone-800 font-medium flex items-center gap-1"
-                        >
-                          <CheckCircle2 size={11} className="text-cyan-500" />
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-
+                  {/* Floating click to expand pill */}
+                  <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs font-mono-tech flex items-center gap-1.5 opacity-90 group-hover/photo:opacity-100 transition-opacity shadow-md">
+                    <Maximize2 size={13} />
+                    <span>Perbesar Foto</span>
                   </div>
                 </div>
+              )}
 
-                {/* Right: Uploaded Photo (Responsive for Mobile & Laptop) */}
-                {item.image && (
-                  <div className="lg:w-72 xl:w-80 w-full shrink-0 pt-2 lg:pt-0">
-                    <div 
-                      onClick={(e) => handleOpenLightbox(e, item.image!, item.institution)}
-                      className="relative group/photo aspect-video sm:aspect-[16/10] rounded-2xl overflow-hidden border-2 border-stone-200 dark:border-stone-800 hover:border-cyan-500/60 shadow-lg bg-stone-950 cursor-pointer transition-all duration-300 hover:shadow-cyan-500/10"
-                    >
-                      <img
-                        src={item.image}
-                        alt={`Dokumentasi ${item.institution}`}
-                        className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500 opacity-95 group-hover/photo:opacity-100"
-                        loading="lazy"
-                      />
-
-                      {/* Overlay gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-black/20 opacity-60 group-hover/photo:opacity-40 transition-opacity" />
-
-                      {/* Click to expand pill */}
-                      <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[11px] font-mono-tech flex items-center gap-1.5 opacity-90 group-hover/photo:opacity-100 transition-opacity shadow-md">
-                        <Maximize2 size={12} />
-                        <span>Perbesar Foto</span>
-                      </div>
-                    </div>
+              {/* School Information Details */}
+              <div className="flex items-start gap-4 sm:gap-6">
+                {/* Fallback category icon when no image exists */}
+                {!item.image && (
+                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all shadow-md">
+                    {getInstitutionIcon(item.iconType)}
                   </div>
                 )}
 
+                <div className="space-y-2.5 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono-tech font-bold text-cyan-600 dark:text-cyan-300 bg-cyan-500/10 border border-cyan-500/30">
+                      {item.period}
+                    </span>
+                    
+                    {item.badge && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono-tech font-bold bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-100 border border-stone-300 dark:border-stone-700">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-serif-luxury font-black text-stone-950 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                    {item.institution}
+                  </h3>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-mono-tech text-stone-700 dark:text-stone-200">
+                    <span className="flex items-center gap-1 font-bold text-stone-900 dark:text-stone-100">
+                      <Award size={13} className="text-cyan-500" />
+                      {item.level}
+                    </span>
+                    <span className="flex items-center gap-1 text-stone-700 dark:text-stone-300 font-medium">
+                      <MapPin size={13} className="text-cyan-500" />
+                      {item.location}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-stone-800 dark:text-stone-100 font-normal leading-relaxed pt-1">
+                    {item.description}
+                  </p>
+
+                  {/* Skill Tags */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {item.skillsFocus.map((skill, sIdx) => (
+                      <span
+                        key={sIdx}
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono-tech bg-stone-200 dark:bg-stone-950 text-stone-900 dark:text-cyan-300 border border-stone-300 dark:border-stone-800 font-medium flex items-center gap-1"
+                      >
+                        <CheckCircle2 size={11} className="text-cyan-500" />
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+
+                </div>
               </div>
             </div>
           ))}
