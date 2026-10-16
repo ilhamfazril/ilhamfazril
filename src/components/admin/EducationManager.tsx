@@ -263,7 +263,7 @@ export const EducationManager: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                 {/* Photo Preview Box */}
-                <div className="md:col-span-5 relative aspect-video rounded-xl overflow-hidden bg-stone-900 border-2 border-stone-800 group shadow-lg">
+                <div className="md:col-span-5 relative aspect-square sm:aspect-[4/3] max-w-xs rounded-xl overflow-hidden bg-stone-900 border-2 border-stone-800 group shadow-lg">
                   {formData.image ? (
                     <>
                       <img

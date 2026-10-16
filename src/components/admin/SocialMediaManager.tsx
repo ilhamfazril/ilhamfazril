@@ -117,6 +117,23 @@ export const SocialMediaManager: React.FC = () => {
     if (!formData.name || !formData.url) return;
 
     let finalUrl = formData.url.trim();
+
+    // Smart auto-formatter for WhatsApp phone numbers
+    if (formData.iconKey === 'whatsapp') {
+      const cleanDigits = finalUrl.replace(/[^0-9+]/g, '');
+      if (cleanDigits && !finalUrl.includes('wa.me') && !finalUrl.includes('whatsapp.com')) {
+        let intlNumber = cleanDigits;
+        if (intlNumber.startsWith('+')) intlNumber = intlNumber.slice(1);
+        if (intlNumber.startsWith('0')) intlNumber = '62' + intlNumber.slice(1);
+        finalUrl = `https://wa.me/${intlNumber}?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.`;
+      }
+    } else if (formData.iconKey === 'mail') {
+      // Smart auto-formatter for Email addresses
+      if (finalUrl.includes('@') && !finalUrl.startsWith('mailto:')) {
+        finalUrl = `mailto:${finalUrl}?subject=Project%20Inquiry%20-%20Ilham%20Fazril`;
+      }
+    }
+
     if (
       !finalUrl.startsWith('http://') &&
       !finalUrl.startsWith('https://') &&

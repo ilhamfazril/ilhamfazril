@@ -827,9 +827,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateSocial = (id: string, updated: Partial<SocialPlatform>) => {
     sound.playClick();
-    setSocials(prev => prev.map(s => (s.id === id ? { ...s, ...updated } : s)));
-    setDoc(doc(db, 'socials', id), cleanPayload(updated), { merge: true }).catch((err) => {
-      console.warn('Failed to sync updated social to Firestore:', err);
+    setSocials(prev => {
+      const next = prev.map(s => (s.id === id ? { ...s, ...updated } : s));
+      const target = next.find(s => s.id === id);
+      if (target) {
+        setDoc(doc(db, 'socials', id), cleanPayload(target)).catch((err) => {
+          console.warn('Failed to sync updated social to Firestore:', err);
+        });
+      }
+      return next;
     });
   };
 
@@ -843,11 +849,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const toggleSocialActive = (id: string) => {
     sound.playClick();
-    const target = socials.find(s => s.id === id);
-    const nextActive = target ? !target.active : true;
-    setSocials(prev => prev.map(s => (s.id === id ? { ...s, active: nextActive } : s)));
-    setDoc(doc(db, 'socials', id), { active: nextActive }, { merge: true }).catch((err) => {
-      console.warn('Failed to toggle social status in Firestore:', err);
+    setSocials(prev => {
+      const next = prev.map(s => (s.id === id ? { ...s, active: !s.active } : s));
+      const target = next.find(s => s.id === id);
+      if (target) {
+        setDoc(doc(db, 'socials', id), cleanPayload(target)).catch((err) => {
+          console.warn('Failed to toggle social status in Firestore:', err);
+        });
+      }
+      return next;
     });
   };
 
@@ -875,9 +885,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateProject = (id: string, updated: Partial<Project>) => {
     sound.playClick();
-    setProjects(prev => prev.map(p => (p.id === id ? { ...p, ...updated } : p)));
-    setDoc(doc(db, 'projects', id), cleanPayload(updated), { merge: true }).catch((err) => {
-      console.warn('Failed to sync updated project to Firestore:', err);
+    setProjects(prev => {
+      const next = prev.map(p => (p.id === id ? { ...p, ...updated } : p));
+      const target = next.find(p => p.id === id);
+      if (target) {
+        setDoc(doc(db, 'projects', id), cleanPayload(target)).catch((err) => {
+          console.warn('Failed to sync updated project to Firestore:', err);
+        });
+      }
+      return next;
     });
   };
 
@@ -913,9 +929,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateEducation = (id: string, updated: Partial<EducationItem>) => {
     sound.playClick();
-    setEducation(prev => prev.map(e => (e.id === id ? { ...e, ...updated } : e)));
-    setDoc(doc(db, 'education', id), cleanPayload(updated), { merge: true }).catch((err) => {
-      console.warn('Failed to sync updated education to Firestore:', err);
+    setEducation(prev => {
+      const next = prev.map(e => (e.id === id ? { ...e, ...updated } : e));
+      const target = next.find(e => e.id === id);
+      if (target) {
+        setDoc(doc(db, 'education', id), cleanPayload(target)).catch((err) => {
+          console.warn('Failed to sync updated education to Firestore:', err);
+        });
+      }
+      return next;
     });
   };
 
@@ -952,9 +974,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateAnnouncement = (id: string, updated: Partial<AnnouncementItem>) => {
     sound.playClick();
-    setAnnouncements(prev => prev.map(a => (a.id === id ? { ...a, ...updated } : a)));
-    setDoc(doc(db, 'broadcasts', id), cleanPayload(updated), { merge: true }).catch((err) => {
-      console.warn('Failed to sync updated announcement to Firestore:', err);
+    setAnnouncements(prev => {
+      const next = prev.map(a => (a.id === id ? { ...a, ...updated } : a));
+      const target = next.find(a => a.id === id);
+      if (target) {
+        setDoc(doc(db, 'broadcasts', id), cleanPayload(target)).catch((err) => {
+          console.warn('Failed to sync updated announcement to Firestore:', err);
+        });
+      }
+      return next;
     });
   };
 
@@ -1062,10 +1090,35 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Profile Management Actions
   const updateProfile = (updated: Partial<ProfileConfig>) => {
     sound.playSuccess();
-    setProfile(prev => ({ ...prev, ...updated }));
-    setDoc(doc(db, 'profile', 'main'), cleanPayload(updated), { merge: true }).catch((err) => {
-      console.warn('Failed to sync profile update to Firestore:', err);
+    setProfile(prev => {
+      const next: ProfileConfig = { ...prev, ...updated };
+      setDoc(doc(db, 'profile', 'main'), cleanPayload(next)).catch((err) => {
+        console.warn('Failed to sync profile update to Firestore:', err);
+      });
+      return next;
     });
+
+    // If WhatsApp or phone was updated, also synchronize the WhatsApp social card
+    if (updated.whatsapp || updated.phone) {
+      const waSocial = socials.find(s => s.iconKey === 'whatsapp');
+      if (waSocial) {
+        updateSocial(waSocial.id, {
+          url: updated.whatsapp || waSocial.url,
+          username: updated.phone || waSocial.username,
+        });
+      }
+    }
+
+    // If Email was updated, also synchronize the Email social card
+    if (updated.email) {
+      const mailSocial = socials.find(s => s.iconKey === 'mail');
+      if (mailSocial) {
+        updateSocial(mailSocial.id, {
+          url: `mailto:${updated.email}?subject=Project%20Inquiry%20-%20Ilham%20Fazril`,
+          username: updated.email,
+        });
+      }
+    }
   };
 
   const resetProfile = () => {

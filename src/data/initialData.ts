@@ -11,6 +11,9 @@ export const INITIAL_PROFILE: ProfileConfig = {
   projectsCompleted: '12+',
   satisfactionRate: '100% On-Time',
   bioShort: 'Fokus pada arsitektur web modern yang bersih, cepat, terintegrasi IoT/NFC, dan berorientasi pada kepuasan pengguna nyata.',
+  email: 'ilhamfazril042@gmail.com',
+  phone: '+62 812-3456-7890',
+  whatsapp: 'https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.',
 };
 
 export const INITIAL_EDUCATION: EducationItem[] = [

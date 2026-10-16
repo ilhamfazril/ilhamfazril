@@ -51,7 +51,10 @@
         "yearsOfExp": { "type": "string" },
         "projectsCompleted": { "type": "string" },
         "satisfactionRate": { "type": "string" },
-        "bioShort": { "type": "string" }
+        "bioShort": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" }
       },
       "required": ["name", "headlineRole"]
     },

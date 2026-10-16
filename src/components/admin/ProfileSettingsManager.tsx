@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { 
   User, 
@@ -12,9 +12,14 @@ import {
   Award, 
   RotateCcw,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  Phone,
+  MessageCircle,
+  AlertCircle
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
+import { processAndCompressImage } from '../../utils/imageUtils';
 
 export const ProfileSettingsManager: React.FC = () => {
   const { profile, updateProfile, resetProfile, setViewMode } = usePortfolio();
@@ -29,11 +34,34 @@ export const ProfileSettingsManager: React.FC = () => {
     projectsCompleted: profile.projectsCompleted || '12+',
     satisfactionRate: profile.satisfactionRate || '100% On-Time',
     photoUrl: profile.photoUrl || '',
+    email: profile.email || 'ilhamfazril042@gmail.com',
+    phone: profile.phone || '+62 812-3456-7890',
+    whatsapp: profile.whatsapp || 'https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.',
   });
 
   const [isSaved, setIsSaved] = useState(false);
   const [photoError, setPhotoError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Synchronize form if remote Firestore profile updates
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      name: profile.name || prev.name,
+      headlineRole: profile.headlineRole || prev.headlineRole,
+      tagline: profile.tagline || prev.tagline,
+      location: profile.location || prev.location,
+      statusBadge: profile.statusBadge || prev.statusBadge,
+      yearsOfExp: profile.yearsOfExp || prev.yearsOfExp,
+      projectsCompleted: profile.projectsCompleted || prev.projectsCompleted,
+      satisfactionRate: profile.satisfactionRate || prev.satisfactionRate,
+      photoUrl: profile.photoUrl !== undefined ? profile.photoUrl : prev.photoUrl,
+      email: profile.email || prev.email,
+      phone: profile.phone || prev.phone,
+      whatsapp: profile.whatsapp || prev.whatsapp,
+    }));
+  }, [profile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -41,32 +69,34 @@ export const ProfileSettingsManager: React.FC = () => {
     setIsSaved(false);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhotoError('');
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setPhotoError('Harap pilih file gambar (JPG, PNG, WebP, dsb)');
+      setPhotoError('Harap pilih file gambar valid (JPG, PNG, WebP)');
       return;
     }
 
-    // Limit to 2.5MB for localStorage compatibility
-    if (file.size > 2.5 * 1024 * 1024) {
-      setPhotoError('Ukuran gambar terlalu besar (maksimal 2.5MB untuk performa cepat)');
-      return;
+    try {
+      setIsProcessing(true);
+      // Auto compress to max 1000px, 0.82 JPEG for instant Firestore syncing without 1MB limit issues
+      const compressedDataUrl = await processAndCompressImage(file, {
+        maxWidth: 1000,
+        maxHeight: 1200,
+        quality: 0.82,
+        format: 'image/jpeg',
+      });
+      setFormData(prev => ({ ...prev, photoUrl: compressedDataUrl }));
+      setIsSaved(false);
+      sound.playSuccess();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal memproses gambar.';
+      setPhotoError(msg);
+    } finally {
+      setIsProcessing(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        setFormData(prev => ({ ...prev, photoUrl: result }));
-        setIsSaved(false);
-        sound.playClick();
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleRemovePhoto = () => {
@@ -98,6 +128,9 @@ export const ProfileSettingsManager: React.FC = () => {
         projectsCompleted: '12+',
         satisfactionRate: '100% On-Time',
         photoUrl: '',
+        email: 'ilhamfazril042@gmail.com',
+        phone: '+62 812-3456-7890',
+        whatsapp: 'https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.',
       });
       setIsSaved(false);
     }
@@ -202,11 +235,12 @@ export const ProfileSettingsManager: React.FC = () => {
               />
               <button
                 type="button"
+                disabled={isProcessing}
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono-tech text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono-tech text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20 disabled:opacity-50"
               >
                 <Upload size={16} />
-                <span>Pilih Foto dari Laptop / Galeri HP</span>
+                <span>{isProcessing ? 'Mengompres & Memproses Foto...' : 'Pilih Foto dari Laptop / Galeri HP'}</span>
               </button>
 
               {formData.photoUrl && (
@@ -340,6 +374,64 @@ export const ProfileSettingsManager: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl bg-stone-950 border border-stone-800 focus:border-cyan-500 text-stone-100 outline-none transition-colors"
                     placeholder="100% On-Time"
                   />
+                </div>
+              </div>
+
+              {/* Direct Contact Channels */}
+              <div className="pt-2 border-t border-stone-800/80 space-y-3">
+                <span className="text-cyan-400 font-bold text-xs uppercase tracking-wider block flex items-center gap-1.5">
+                  <Mail size={13} />
+                  Kanal Kontak & Komunikasi Utama
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-stone-300 font-bold mb-1.5 flex items-center gap-1.5">
+                      <Mail size={12} className="text-red-400" />
+                      Email Resmi Developer
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2.5 rounded-xl bg-stone-950 border border-stone-800 focus:border-cyan-500 text-stone-100 outline-none transition-colors"
+                      placeholder="ilhamfazril042@gmail.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-stone-300 font-bold mb-1.5 flex items-center gap-1.5">
+                      <Phone size={12} className="text-emerald-400" />
+                      Nomor Telepon / Display Kontak
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2.5 rounded-xl bg-stone-950 border border-stone-800 focus:border-cyan-500 text-stone-100 outline-none transition-colors"
+                      placeholder="+62 812-3456-7890"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-stone-300 font-bold mb-1.5 flex items-center gap-1.5">
+                    <MessageCircle size={12} className="text-emerald-400" />
+                    Tautan / Link Langsung WhatsApp (wa.me)
+                  </label>
+                  <input
+                    type="text"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 rounded-xl bg-stone-950 border border-stone-800 focus:border-cyan-500 text-stone-100 outline-none transition-colors"
+                    placeholder="https://wa.me/6281234567890?text=..."
+                  />
+                  <p className="text-[10px] text-stone-400 mt-1">
+                    Tautan ini langsung terhubung dengan tombol &quot;Chat WhatsApp&quot; dan panduan kontak di semua halaman pengunjung.
+                  </p>
                 </div>
               </div>
 

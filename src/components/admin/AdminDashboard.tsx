@@ -84,7 +84,7 @@ export const AdminDashboard: React.FC = () => {
     { id: 'education', label: 'Riwayat Pendidikan', icon: <GraduationCap size={18} />, badge: `${education.length} Tingkat` },
     { id: 'projects', label: 'Manajemen Proyek', icon: <Layers size={18} />, badge: `${projects.length}` },
     { id: 'broadcast', label: 'Siaran Pengumuman', icon: <Megaphone size={18} />, badge: `${announcements.filter(a => a.active).length} Live` },
-    { id: 'socials', label: 'Kendali Media Sosial', icon: <Share2 size={18} />, badge: `${socials.filter(s => s.active).length} Aktif` },
+    { id: 'socials', label: 'Kontak & Media Sosial', icon: <Share2 size={18} />, badge: `${socials.filter(s => s.active).length} Aktif` },
     { id: 'nfc', label: 'NFC Card 13.56 MHz', icon: <Radio size={18} />, badge: `${nfcCards.length} Kartu` },
     { id: 'qr-print', label: 'Generate QR & Cetak Pass', icon: <QrCode size={18} /> },
     { id: 'inquiries', label: 'Pesan Masuk (Inbox)', icon: <Mail size={18} />, badge: inquiries.some(i => !i.read) ? 'Baru' : undefined },

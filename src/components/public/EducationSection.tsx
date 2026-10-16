@@ -83,28 +83,28 @@ export const EducationSection: React.FC = () => {
                   : 'bg-stone-100/80 dark:bg-stone-900/50 border-stone-200 dark:border-stone-800 hover:border-cyan-500/40'
               }`}
             >
-              {/* Photo placed ABOVE the school name */}
+              {/* Photo placed ABOVE the school name - squarish aspect ratio on laptop & HP */}
               {item.image && (
                 <div 
                   onClick={(e) => handleOpenLightbox(e, item.image!, item.institution)}
-                  className="relative group/photo w-full h-48 sm:h-60 md:h-72 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 hover:border-cyan-500/60 shadow-lg bg-stone-950 cursor-pointer transition-all duration-300 mb-6"
+                  className="relative group/photo w-full max-w-sm sm:max-w-md aspect-[4/3] sm:aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 hover:border-cyan-500/60 shadow-lg bg-stone-950 cursor-pointer transition-all duration-300 mb-6 mx-auto sm:mx-0"
                 >
                   <img
                     src={item.image}
                     alt={`Dokumentasi ${item.institution}`}
-                    className="w-full h-full object-cover group-hover/photo:scale-105 transition-transform duration-500 opacity-95 group-hover/photo:opacity-100"
+                    className="w-full h-full object-cover object-center group-hover/photo:scale-105 transition-transform duration-500 opacity-95 group-hover/photo:opacity-100"
                     loading="lazy"
                   />
                   {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-black/20 opacity-60 group-hover/photo:opacity-30 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-transparent to-black/20 opacity-50 group-hover/photo:opacity-20 transition-opacity" />
 
                   {/* Floating category icon badge */}
-                  <div className="absolute top-3 left-3 p-2.5 rounded-xl bg-black/75 backdrop-blur-md border border-white/10 text-cyan-400 shadow-md">
+                  <div className="absolute top-3 left-3 p-2.5 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 text-cyan-400 shadow-md">
                     {getInstitutionIcon(item.iconType)}
                   </div>
 
                   {/* Floating click to expand pill */}
-                  <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs font-mono-tech flex items-center gap-1.5 opacity-90 group-hover/photo:opacity-100 transition-opacity shadow-md">
+                  <div className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-black/85 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs font-mono-tech flex items-center gap-1.5 opacity-90 group-hover/photo:opacity-100 transition-opacity shadow-md">
                     <Maximize2 size={13} />
                     <span>Perbesar Foto</span>
                   </div>

@@ -17,7 +17,8 @@ import confetti from 'canvas-confetti';
 import { sound } from '../../utils/soundEffects';
 
 export const ContactSection: React.FC = () => {
-  const { socials, addInquiry, trackContactClick } = usePortfolio();
+  const { socials, addInquiry, trackContactClick, profile } = usePortfolio();
+  const waContact = socials.find(s => s.iconKey === 'whatsapp');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -195,14 +196,18 @@ export const ContactSection: React.FC = () => {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   WhatsApp Direct Line
                 </span>
+                <p className="text-xs font-mono-tech font-bold text-emerald-600 dark:text-emerald-400">
+                  {waContact?.username || profile.phone || '+62 812-3456-7890'}
+                </p>
                 <p className="text-xs text-stone-800 dark:text-stone-200">
                   Konsultasi kilat arsitektur web, estimasi waktu, dan inquiry privat.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => {
-                  const wa = socials.find(s => s.iconKey === 'whatsapp');
-                  if (wa) handlePlatformClick('WhatsApp', wa.url);
+                  const targetUrl = waContact?.url || profile.whatsapp || 'https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.';
+                  handlePlatformClick('WhatsApp', targetUrl);
                 }}
                 className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs font-mono-tech transition-all cursor-pointer shrink-0 shadow-lg shadow-emerald-500/20"
               >

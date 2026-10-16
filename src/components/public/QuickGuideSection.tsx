@@ -15,8 +15,21 @@ import { sound } from '../../utils/soundEffects';
 import { usePortfolio } from '../../context/PortfolioContext';
 
 export const QuickGuideSection: React.FC = () => {
-  const { setShowAuthModal, setAuthModalTab } = usePortfolio();
+  const { setShowAuthModal, setAuthModalTab, socials, profile } = usePortfolio();
   const [activeTab, setActiveTab] = useState<'overview' | 'nfc' | 'projects' | 'contact'>('overview');
+
+  const waSocial = socials.find(s => s.iconKey === 'whatsapp');
+  const mailSocial = socials.find(s => s.iconKey === 'mail');
+  const linkedInSocial = socials.find(s => s.iconKey === 'linkedin');
+
+  const waUrl = waSocial?.url || profile.whatsapp || 'https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek.';
+  const waLabel = waSocial?.username || profile.phone || '+62 812-3456-7890';
+
+  const mailUrl = mailSocial?.url || (profile.email ? `mailto:${profile.email}?subject=Project%20Inquiry%20-%20Ilham%20Fazril` : 'mailto:ilhamfazril042@gmail.com?subject=Project%20Inquiry%20-%20Ilham%20Fazril');
+  const mailLabel = mailSocial?.username || profile.email || 'ilhamfazril042@gmail.com';
+
+  const linkedInUrl = linkedInSocial?.url || 'https://linkedin.com/in/ilhamfazril';
+  const linkedInLabel = linkedInSocial?.username || 'in/ilhamfazril';
 
   const handleTabChange = (tab: 'overview' | 'nfc' | 'projects' | 'contact') => {
     sound.playClick();
@@ -313,30 +326,33 @@ export const QuickGuideSection: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
                   <a
-                    href="https://wa.me/6281234567890?text=Halo%20Ilham%20Fazril%2C%20saya%20tertarik%20untuk%20berkolaborasi%20proyek."
+                    href={waUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="p-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 transition-all flex flex-col justify-between gap-2"
                   >
                     <span className="text-xs font-bold">💬 WhatsApp Langsung</span>
+                    <span className="text-[11px] font-mono-tech truncate text-emerald-600 dark:text-emerald-400 font-semibold">{waLabel}</span>
                     <span className="text-[11px] opacity-80">Respon cepat untuk tanya jawab & tawaran proyek.</span>
                   </a>
 
                   <a
-                    href="mailto:ilhamfazril042@gmail.com?subject=Project%20Inquiry%20-%20Ilham%20Fazril"
+                    href={mailUrl}
                     className="p-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-700 dark:text-red-300 transition-all flex flex-col justify-between gap-2"
                   >
                     <span className="text-xs font-bold">✉️ Email Resmi</span>
-                    <span className="text-[11px] opacity-80">ilhamfazril042@gmail.com untuk surat resmi / NDA.</span>
+                    <span className="text-[11px] font-mono-tech truncate text-red-600 dark:text-red-400 font-semibold">{mailLabel}</span>
+                    <span className="text-[11px] opacity-80">Kirim proposal proyek, surat resmi, atau NDA.</span>
                   </a>
 
                   <a
-                    href="https://linkedin.com/in/ilhamfazril"
+                    href={linkedInUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="p-4 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-700 dark:text-blue-300 transition-all flex flex-col justify-between gap-2"
                   >
                     <span className="text-xs font-bold">💼 LinkedIn</span>
+                    <span className="text-[11px] font-mono-tech truncate text-blue-600 dark:text-blue-400 font-semibold">{linkedInLabel}</span>
                     <span className="text-[11px] opacity-80">Koneksi jaringan profesional & riwayat karir.</span>
                   </a>
                 </div>

@@ -9,6 +9,9 @@ export interface ProfileConfig {
   projectsCompleted: string;
   satisfactionRate: string;
   bioShort?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
 }
 
 export type ThemeMode = 'dark' | 'light';
