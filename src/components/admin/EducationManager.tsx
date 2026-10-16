@@ -23,7 +23,7 @@ import {
   Award
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
-import { processAndCompressImage } from '../../utils/imageUtils';
+import { processAndCompressImage, getImageSizeKb } from '../../utils/imageUtils';
 
 export const EducationManager: React.FC = () => {
   const { education, addEducation, updateEducation, deleteEducation, resetEducation } = usePortfolio();
@@ -105,9 +105,9 @@ export const EducationManager: React.FC = () => {
     try {
       setIsProcessingImage(true);
       const compressedDataUrl = await processAndCompressImage(file, {
-        maxWidth: 1280,
-        maxHeight: 800,
-        quality: 0.82,
+        maxWidth: 900,
+        maxHeight: 900,
+        quality: 0.80,
         format: 'image/jpeg',
       });
       setFormData(prev => ({ ...prev, image: compressedDataUrl }));
@@ -330,8 +330,15 @@ export const EducationManager: React.FC = () => {
                     )}
                   </div>
 
+                  {formData.image && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono-tech text-[11px] font-bold">
+                      <CheckCircle2 size={13} />
+                      <span>Foto Terkompresi Otomatis: ~{getImageSizeKb(formData.image)} KB (Ringan & Cepat Dimuat)</span>
+                    </div>
+                  )}
+
                   <p className="text-[11px] font-mono-tech text-stone-400 leading-relaxed">
-                    💡 Pilih foto gedung sekolah, momen kegiatan PKL, laboratorium, atau sertifikat kelulusan. Foto akan otomatis ditampilkan di linimasa riwayat pendidikan publik.
+                    ⚡ Kompresi Otomatis Aktif: Foto gedung, kegiatan, atau ijazah langsung dikompresi ke JPEG ringan saat diunggah agar linimasa pendidikan tampil instan di perangkat pengunjung.
                   </p>
 
                   {uploadError && (
@@ -489,7 +496,7 @@ export const EducationManager: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 w-full">
               {/* Optional Photo or Icon */}
               {item.image ? (
-                <div className="relative w-full sm:w-36 h-28 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-cyan-500/30 bg-stone-950 group-hover:scale-102 transition-transform shadow-md">
+                <div className="relative w-full max-w-[220px] sm:w-32 aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden shrink-0 border border-cyan-500/30 bg-stone-950 group-hover:scale-102 transition-transform shadow-md">
                   <img
                     src={item.image}
                     alt={item.institution}

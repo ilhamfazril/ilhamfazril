@@ -19,7 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
-import { processAndCompressImage } from '../../utils/imageUtils';
+import { processAndCompressImage, getImageSizeKb } from '../../utils/imageUtils';
 
 export const ProfileSettingsManager: React.FC = () => {
   const { profile, updateProfile, resetProfile, setViewMode } = usePortfolio();
@@ -216,6 +216,13 @@ export const ProfileSettingsManager: React.FC = () => {
                 )}
               </div>
 
+              {formData.photoUrl && (
+                <div className="mt-2.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono-tech text-[11px] flex items-center justify-center gap-1.5 font-bold">
+                  <CheckCircle2 size={13} />
+                  <span>Gambar Terkompresi: ~{getImageSizeKb(formData.photoUrl)} KB (Super Ringan)</span>
+                </div>
+              )}
+
               {photoError && (
                 <p className="text-xs text-red-400 font-mono-tech mt-2 text-center">
                   ⚠️ {photoError}
@@ -254,9 +261,14 @@ export const ProfileSettingsManager: React.FC = () => {
                 </button>
               )}
 
-              <p className="text-[11px] font-mono-tech text-stone-400 text-center leading-relaxed">
-                💡 Saran: Gunakan foto pose profesional setengah badan (portrait) dengan pencahayaan jelas untuk hasil maksimal di layar laptop & HP.
-              </p>
+              <div className="p-3 rounded-xl bg-stone-950/80 border border-stone-800 text-[11px] font-mono-tech text-stone-300 space-y-1">
+                <span className="text-cyan-400 font-bold block flex items-center gap-1">
+                  ⚡ Kompresi Otomatis Aktif
+                </span>
+                <p className="text-stone-400 leading-relaxed">
+                  Setiap foto yang Anda upload otomatis dikompresi ke format JPEG optimal (kualitas tajam, ukuran ringan ~50-80 KB) agar website dapat dimuat seketika di ponsel dan laptop tanpa beban kuota.
+                </p>
+              </div>
             </div>
           </div>
         </div>

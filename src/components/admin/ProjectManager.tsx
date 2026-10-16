@@ -19,7 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
-import { processAndCompressImage } from '../../utils/imageUtils';
+import { processAndCompressImage, getImageSizeKb } from '../../utils/imageUtils';
 
 export const ProjectManager: React.FC = () => {
   const { projects, addProject, updateProject, deleteProject, resetProjects } = usePortfolio();
@@ -108,11 +108,11 @@ export const ProjectManager: React.FC = () => {
 
     try {
       setIsProcessingImage(true);
-      // Auto compress to max 1280px, 0.82 quality JPEG for super fast storage
+      // Auto compress to max 1000px, 0.80 quality JPEG for super fast storage
       const compressedDataUrl = await processAndCompressImage(file, {
-        maxWidth: 1280,
-        maxHeight: 800,
-        quality: 0.82,
+        maxWidth: 1000,
+        maxHeight: 750,
+        quality: 0.80,
         format: 'image/jpeg',
       });
       setFormData(prev => ({ ...prev, image: compressedDataUrl }));
@@ -326,8 +326,15 @@ export const ProjectManager: React.FC = () => {
                     )}
                   </div>
 
+                  {formData.image && formData.image.startsWith('data:image/') && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono-tech text-[11px] font-bold">
+                      <CheckCircle2 size={13} />
+                      <span>Gambar Proyek Terkompresi Otomatis: ~{getImageSizeKb(formData.image)} KB (Super Ringan)</span>
+                    </div>
+                  )}
+
                   <p className="text-[11px] font-mono-tech text-stone-400 leading-relaxed">
-                    💡 Pilih foto karya/mockup proyek dari galeri ponsel atau laptop. Foto otomatis dikompres secara instan agar ringan dan tersimpan di memori browser.
+                    ⚡ Kompresi Otomatis Aktif: Setiap gambar proyek otomatis dikompresi ke format JPEG optimal (1000px, 0.80) sehingga portofolio tampil cepat dan hemat data di semua perangkat.
                   </p>
 
                   {uploadError && (

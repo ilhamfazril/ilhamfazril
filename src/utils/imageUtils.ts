@@ -15,9 +15,9 @@ export function processAndCompressImage(
   options: ImageCompressionOptions = {}
 ): Promise<string> {
   const {
-    maxWidth = 1280,
-    maxHeight = 1280,
-    quality = 0.82,
+    maxWidth = 1000,
+    maxHeight = 1000,
+    quality = 0.80,
     format = 'image/jpeg'
   } = options;
 
@@ -92,3 +92,14 @@ export function processAndCompressImage(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Returns estimated size in KB for a Base64 data URL
+ */
+export function getImageSizeKb(dataUrl: string): number {
+  if (!dataUrl || !dataUrl.includes(',')) return 0;
+  const base64Str = dataUrl.split(',')[1] || '';
+  const bytes = Math.round((base64Str.length * 3) / 4);
+  return Math.round(bytes / 1024);
+}
+
