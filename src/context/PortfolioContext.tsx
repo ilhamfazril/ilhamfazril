@@ -488,6 +488,72 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     );
 
+    // 6. Socials / Kontak real-time listener
+    const unsubSocials = onSnapshot(
+      collection(db, 'socials'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteSocials: SocialPlatform[] = [];
+          snapshot.forEach((d) => {
+            remoteSocials.push({ id: d.id, ...(d.data() as Omit<SocialPlatform, 'id'>) });
+          });
+          remoteSocials.sort((a, b) => (a.order || 0) - (b.order || 0));
+          setSocials(remoteSocials);
+        } else {
+          // Auto-seed initial socials if empty
+          INITIAL_SOCIALS.forEach((s) => {
+            setDoc(doc(db, 'socials', s.id), cleanPayload(s)).catch(() => {});
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firestore socials sync fallback:', err);
+      }
+    );
+
+    // 7. NFC Smart Cards real-time listener
+    const unsubNfcCards = onSnapshot(
+      collection(db, 'nfcCards'),
+      (snapshot) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (!snapshot.empty) {
+          const remoteCards: NfcCardRecord[] = [];
+          snapshot.forEach((d) => {
+            remoteCards.push({ id: d.id, ...(d.data() as Omit<NfcCardRecord, 'id'>) });
+          });
+          setNfcCards(remoteCards);
+        } else {
+          INITIAL_NFC_CARDS.forEach((card) => {
+            setDoc(doc(db, 'nfcCards', card.id), cleanPayload(card)).catch(() => {});
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firestore nfcCards sync fallback:', err);
+      }
+    );
+
+    // 8. Analytics real-time listener
+    const unsubAnalytics = onSnapshot(
+      doc(db, 'analytics', 'main'),
+      (snap) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (snap.exists()) {
+          const data = snap.data() as AnalyticsData;
+          setAnalytics(prev => ({ ...prev, ...data }));
+        } else {
+          setDoc(doc(db, 'analytics', 'main'), cleanPayload(INITIAL_ANALYTICS)).catch(() => {});
+        }
+      },
+      (err) => {
+        console.warn('Firestore analytics sync fallback:', err);
+      }
+    );
+
     return () => {
       isMounted = false;
       unsubProfile();
@@ -495,6 +561,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       unsubEducation();
       unsubBroadcasts();
       unsubInquiries();
+      unsubSocials();
+      unsubNfcCards();
+      unsubAnalytics();
     };
   }, []);
 
@@ -744,32 +813,50 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Socials Actions
   const addSocial = (data: Omit<SocialPlatform, 'id' | 'order'>) => {
     sound.playSuccess();
+    const id = `soc-${Date.now()}`;
     const newSocial: SocialPlatform = {
       ...data,
-      id: `soc-${Date.now()}`,
+      id,
       order: socials.length + 1,
     };
     setSocials(prev => [...prev, newSocial]);
+    setDoc(doc(db, 'socials', id), cleanPayload(newSocial)).catch((err) => {
+      console.warn('Failed to sync added social to Firestore:', err);
+    });
   };
 
   const updateSocial = (id: string, updated: Partial<SocialPlatform>) => {
     sound.playClick();
     setSocials(prev => prev.map(s => (s.id === id ? { ...s, ...updated } : s)));
+    setDoc(doc(db, 'socials', id), cleanPayload(updated), { merge: true }).catch((err) => {
+      console.warn('Failed to sync updated social to Firestore:', err);
+    });
   };
 
   const deleteSocial = (id: string) => {
     sound.playClick();
     setSocials(prev => prev.filter(s => s.id !== id));
+    deleteDoc(doc(db, 'socials', id)).catch((err) => {
+      console.warn('Failed to sync deleted social from Firestore:', err);
+    });
   };
 
   const toggleSocialActive = (id: string) => {
     sound.playClick();
-    setSocials(prev => prev.map(s => (s.id === id ? { ...s, active: !s.active } : s)));
+    const target = socials.find(s => s.id === id);
+    const nextActive = target ? !target.active : true;
+    setSocials(prev => prev.map(s => (s.id === id ? { ...s, active: nextActive } : s)));
+    setDoc(doc(db, 'socials', id), { active: nextActive }, { merge: true }).catch((err) => {
+      console.warn('Failed to toggle social status in Firestore:', err);
+    });
   };
 
   const resetSocials = () => {
     sound.playClick();
     setSocials(INITIAL_SOCIALS);
+    INITIAL_SOCIALS.forEach(s => {
+      setDoc(doc(db, 'socials', s.id), cleanPayload(s)).catch(() => {});
+    });
   };
 
   // Projects Actions
@@ -890,19 +977,26 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // NFC Card Management
   const registerNfcCard = (cardData: Omit<NfcCardRecord, 'id' | 'linkedAt' | 'status'>): NfcCardRecord => {
     sound.playSuccess();
+    const id = `card-${Date.now()}`;
     const newCard: NfcCardRecord = {
       ...cardData,
-      id: `card-${Date.now()}`,
+      id,
       linkedAt: new Date().toLocaleString('id-ID'),
       status: 'active',
     };
     setNfcCards(prev => [newCard, ...prev]);
+    setDoc(doc(db, 'nfcCards', id), cleanPayload(newCard)).catch((err) => {
+      console.warn('Failed to sync registered NFC card to Firestore:', err);
+    });
     return newCard;
   };
 
   const deleteNfcCard = (id: string) => {
     sound.playClick();
     setNfcCards(prev => prev.filter(c => c.id !== id));
+    deleteDoc(doc(db, 'nfcCards', id)).catch((err) => {
+      console.warn('Failed to delete NFC card from Firestore:', err);
+    });
   };
 
   // Inquiries Actions
@@ -917,7 +1011,11 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       status: 'new',
     };
     setInquiries(prev => [newInquiry, ...prev]);
-    setAnalytics(prev => ({ ...prev, contactClicks: prev.contactClicks + 1 }));
+    setAnalytics(prev => {
+      const next = { ...prev, contactClicks: prev.contactClicks + 1 };
+      setDoc(doc(db, 'analytics', 'main'), cleanPayload(next), { merge: true }).catch(() => {});
+      return next;
+    });
     setDoc(doc(db, 'inquiries', id), cleanPayload(newInquiry)).catch((err) => {
       console.warn('Failed to sync added inquiry to Firestore:', err);
     });
@@ -938,15 +1036,27 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Trackers
   const trackProjectClick = () => {
-    setAnalytics(prev => ({ ...prev, projectClicks: prev.projectClicks + 1 }));
+    setAnalytics(prev => {
+      const next = { ...prev, projectClicks: prev.projectClicks + 1 };
+      setDoc(doc(db, 'analytics', 'main'), { projectClicks: next.projectClicks }, { merge: true }).catch(() => {});
+      return next;
+    });
   };
 
   const trackContactClick = () => {
-    setAnalytics(prev => ({ ...prev, contactClicks: prev.contactClicks + 1 }));
+    setAnalytics(prev => {
+      const next = { ...prev, contactClicks: prev.contactClicks + 1 };
+      setDoc(doc(db, 'analytics', 'main'), { contactClicks: next.contactClicks }, { merge: true }).catch(() => {});
+      return next;
+    });
   };
 
   const trackNfcTap = () => {
-    setAnalytics(prev => ({ ...prev, nfcTaps: prev.nfcTaps + 1 }));
+    setAnalytics(prev => {
+      const next = { ...prev, nfcTaps: prev.nfcTaps + 1 };
+      setDoc(doc(db, 'analytics', 'main'), { nfcTaps: next.nfcTaps }, { merge: true }).catch(() => {});
+      return next;
+    });
   };
 
   // Profile Management Actions

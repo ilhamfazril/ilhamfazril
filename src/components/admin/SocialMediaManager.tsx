@@ -72,6 +72,8 @@ export const SocialMediaManager: React.FC = () => {
     description: '',
   });
 
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
   const handleStartAdd = () => {
     sound.playClick();
     setEditingId(null);
@@ -114,11 +116,22 @@ export const SocialMediaManager: React.FC = () => {
     e.preventDefault();
     if (!formData.name || !formData.url) return;
 
+    let finalUrl = formData.url.trim();
+    if (
+      !finalUrl.startsWith('http://') &&
+      !finalUrl.startsWith('https://') &&
+      !finalUrl.startsWith('mailto:') &&
+      !finalUrl.startsWith('tel:') &&
+      !finalUrl.startsWith('#')
+    ) {
+      finalUrl = 'https://' + finalUrl;
+    }
+
     if (isAdding) {
       addSocial({
         name: formData.name,
         iconKey: formData.iconKey,
-        url: formData.url,
+        url: finalUrl,
         username: formData.username || formData.name,
         badge: formData.badge || undefined,
         color: formData.color,
@@ -126,11 +139,13 @@ export const SocialMediaManager: React.FC = () => {
         description: formData.description || undefined,
       });
       setIsAdding(false);
+      setSuccessToast(`Kontak "${formData.name}" berhasil ditambahkan & tersimpan ke Cloud Firebase!`);
+      setTimeout(() => setSuccessToast(null), 3500);
     } else if (editingId) {
       updateSocial(editingId, {
         name: formData.name,
         iconKey: formData.iconKey,
-        url: formData.url,
+        url: finalUrl,
         username: formData.username || formData.name,
         badge: formData.badge || undefined,
         color: formData.color,
@@ -138,6 +153,8 @@ export const SocialMediaManager: React.FC = () => {
         description: formData.description || undefined,
       });
       setEditingId(null);
+      setSuccessToast(`Kontak "${formData.name}" berhasil diperbarui & tersimpan ke Cloud Firebase!`);
+      setTimeout(() => setSuccessToast(null), 3500);
     }
   };
 
@@ -178,6 +195,14 @@ export const SocialMediaManager: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Success Notification Banner */}
+      {successToast && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 font-mono-tech text-xs flex items-center gap-2.5 animate-in fade-in duration-200">
+          <ShieldCheck size={18} className="shrink-0" />
+          <span className="font-bold">{successToast}</span>
+        </div>
+      )}
 
       {/* Add / Edit Form Drawer */}
       {(isAdding || editingId) && (
@@ -228,9 +253,9 @@ export const SocialMediaManager: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-mono-tech text-stone-400">Target URL / Link Tujuan *</label>
                 <input
-                  type="url"
+                  type="text"
                   required
-                  placeholder="https://wa.me/6281234567890 atau https://instagram.com/..."
+                  placeholder="https://wa.me/... atau https://instagram.com/... atau mailto:..."
                   value={formData.url}
                   onChange={e => setFormData({ ...formData, url: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 text-sm font-sans focus:border-amber-500 focus:outline-none"

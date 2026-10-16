@@ -43,17 +43,49 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "headline": { "type": "string" },
-        "bio": { "type": "string" },
-        "avatar": { "type": "string" },
+        "headlineRole": { "type": "string" },
+        "tagline": { "type": "string" },
         "location": { "type": "string" },
-        "status": { "type": "string" },
-        "resumeUrl": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "updatedAt": { "type": "string" }
+        "statusBadge": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "yearsOfExp": { "type": "string" },
+        "projectsCompleted": { "type": "string" },
+        "satisfactionRate": { "type": "string" },
+        "bioShort": { "type": "string" }
       },
-      "required": ["name", "headline"]
+      "required": ["name", "headlineRole"]
+    },
+    "SocialPlatform": {
+      "title": "SocialPlatform",
+      "description": "Social media channels and direct contact routes",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "iconKey": { "type": "string" },
+        "url": { "type": "string" },
+        "username": { "type": "string" },
+        "badge": { "type": "string" },
+        "color": { "type": "string" },
+        "active": { "type": "boolean" },
+        "order": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "url", "iconKey"]
+    },
+    "NfcCardRecord": {
+      "title": "NfcCardRecord",
+      "description": "Registered 13.56 MHz NFC smart card keys",
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "cardUid": { "type": "string" },
+        "chipType": { "type": "string" },
+        "authKeyHash": { "type": "string" },
+        "status": { "type": "string" },
+        "linkedAt": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["label", "cardUid"]
     },
     "Announcement": {
       "title": "Announcement",
@@ -83,9 +115,25 @@
         "read": { "type": "boolean" }
       },
       "required": ["name", "email", "message"]
+    },
+    "AnalyticsData": {
+      "title": "AnalyticsData",
+      "description": "System analytics tracking counts",
+      "type": "object",
+      "properties": {
+        "totalVisits": { "type": "number" },
+        "projectClicks": { "type": "number" },
+        "contactClicks": { "type": "number" },
+        "nfcTaps": { "type": "number" },
+        "devLogins": { "type": "number" }
+      }
     }
   },
   "firestore": {
+    "/socials/{socialId}": {
+      "schema": "SocialPlatform",
+      "description": "Contact links and social media channels"
+    },
     "/projects/{projectId}": {
       "schema": "Project",
       "description": "Portfolio projects collection"
@@ -102,9 +150,17 @@
       "schema": "Announcement",
       "description": "Announcements collection"
     },
+    "/nfcCards/{cardId}": {
+      "schema": "NfcCardRecord",
+      "description": "NFC smart cards authentication registry"
+    },
     "/inquiries/{inquiryId}": {
       "schema": "MessageInquiry",
       "description": "Contact form messages collection"
+    },
+    "/analytics/{analyticsId}": {
+      "schema": "AnalyticsData",
+      "description": "Telemetry and analytics statistics"
     }
   }
 }
