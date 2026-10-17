@@ -140,9 +140,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="dark">
+    <html lang="id" className="dark" suppressHydrationWarning>
       <head />
-      <body className="bg-black text-stone-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen">
+      <body 
+        className="bg-black text-stone-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen"
+        suppressHydrationWarning
+      >
         <script
           key="schema-jsonld"
           id="schema-jsonld"

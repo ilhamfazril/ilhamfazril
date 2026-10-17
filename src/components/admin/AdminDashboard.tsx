@@ -10,6 +10,7 @@ import { BroadcastManager } from './BroadcastManager';
 import { CyberTerminal } from './CyberTerminal';
 import { ProfileSettingsManager } from './ProfileSettingsManager';
 import { EducationManager } from './EducationManager';
+import { IntroManager } from './IntroManager';
 import { 
   BarChart3, 
   Share2, 
@@ -32,11 +33,13 @@ import {
   Lock,
   Megaphone,
   UserCheck,
-  GraduationCap
+  GraduationCap,
+  Play,
+  Film
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
-type AdminTab = 'overview' | 'profile' | 'education' | 'projects' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'inquiries' | 'terminal';
+type AdminTab = 'overview' | 'intro' | 'profile' | 'education' | 'projects' | 'broadcast' | 'socials' | 'nfc' | 'qr-print' | 'inquiries' | 'terminal';
 
 export const AdminDashboard: React.FC = () => {
   const { 
@@ -52,7 +55,9 @@ export const AdminDashboard: React.FC = () => {
     nfcCards, 
     inquiries,
     announcements,
-    isFirebaseConnected
+    isFirebaseConnected,
+    setShowWebsiteIntro,
+    introConfig
   } = usePortfolio();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
@@ -80,6 +85,7 @@ export const AdminDashboard: React.FC = () => {
 
   const navItems = [
     { id: 'overview', label: 'Ringkasan & Analitik', icon: <BarChart3 size={18} /> },
+    { id: 'intro', label: 'Video Intro Website', icon: <Film size={18} />, badge: introConfig.enabled ? 'Aktif' : 'Off' },
     { id: 'profile', label: 'Foto Profil & Identitas', icon: <UserCheck size={18} />, badge: 'Hero' },
     { id: 'education', label: 'Riwayat Pendidikan', icon: <GraduationCap size={18} />, badge: `${education.length} Tingkat` },
     { id: 'projects', label: 'Manajemen Proyek', icon: <Layers size={18} />, badge: `${projects.length}` },
@@ -134,6 +140,21 @@ export const AdminDashboard: React.FC = () => {
             <Clock size={13} className="text-cyan-400" />
             <span>{liveTime}</span>
           </div>
+
+          {/* Video Intro Tester Button */}
+          <button
+            id="admin-test-intro-btn"
+            onClick={() => {
+              sound.playClick();
+              setViewMode('public');
+              setShowWebsiteIntro(true);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-mono-tech flex items-center gap-1.5 transition-colors cursor-pointer font-bold"
+            title="Uji Putar Video Intro Sinematik"
+          >
+            <Play size={13} className="fill-cyan-400 text-cyan-400" />
+            <span className="hidden lg:inline">Tes Intro Video</span>
+          </button>
 
           {/* Public Preview Button */}
           <button
@@ -352,6 +373,9 @@ export const AdminDashboard: React.FC = () => {
 
             </div>
           )}
+
+          {/* TAB: INTRO VIDEO MANAGER */}
+          {activeTab === 'intro' && <IntroManager />}
 
           {/* TAB: PROFILE & PHOTO SETTINGS */}
           {activeTab === 'profile' && <ProfileSettingsManager />}

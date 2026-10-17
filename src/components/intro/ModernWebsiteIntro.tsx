@@ -2,23 +2,18 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { 
-  Radio, 
-  Cpu, 
-  Layers, 
-  Volume2,
-  CheckCircle2,
-  Loader2
-} from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
 export const ModernWebsiteIntro: React.FC = () => {
-  const { showWebsiteIntro, setShowWebsiteIntro } = usePortfolio();
-  const [progress, setProgress] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('Memulai inisialisasi modul UI...');
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const hasTriggeredDismiss = useRef(false);
+  const { showWebsiteIntro, setShowWebsiteIntro, introConfig } = usePortfolio();
+  
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hasTriggeredExit = useRef(false);
 
   const safeScrollToTop = useCallback(() => {
     try {
@@ -30,195 +25,157 @@ export const ModernWebsiteIntro: React.FC = () => {
     } catch {}
   }, []);
 
-  const triggerDismiss = useCallback(() => {
-    if (hasTriggeredDismiss.current) return;
-    hasTriggeredDismiss.current = true;
+  const triggerExit = useCallback(() => {
+    if (hasTriggeredExit.current) return;
+    hasTriggeredExit.current = true;
 
+    // Mark as viewed for session if frequency is once_per_session
     try {
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        sessionStorage.setItem('ilham_seen_website_intro', 'true');
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('ilham_intro_viewed', 'true');
       }
     } catch {}
 
-    setIsExiting(true);
+    setIsTransitioning(true);
     safeScrollToTop();
 
-    // Smooth fade out animation before unmount
+    try {
+      sound.playSuccess();
+    } catch {}
+
+    // Smooth cinematic iris/fade transition into the main portfolio
     setTimeout(() => {
-      setIsDismissed(true);
       setShowWebsiteIntro(false);
       safeScrollToTop();
-    }, 280);
+    }, 500);
   }, [safeScrollToTop, setShowWebsiteIntro]);
 
-  // Audio start & Auto-progress logic
+  // Video Autoplay Initialization
   useEffect(() => {
-    if (!showWebsiteIntro || isDismissed) return;
+    if (!showWebsiteIntro || !introConfig.enabled) return;
 
     safeScrollToTop();
+    const vid = videoRef.current;
+    if (!vid) return;
 
-    try {
-      sound.playFuturisticIntro();
-    } catch {}
+    vid.currentTime = 0;
+    
+    // Attempt unmuted playback first
+    const playPromise = vid.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsMuted(false);
+          setAudioBlocked(false);
+        })
+        .catch((err) => {
+          // If browser strictly blocks unmuted autoplay without prior gesture, start muted
+          console.warn('Browser requires user interaction for unmuted audio, playing muted fallback:', err);
+          vid.muted = true;
+          setIsMuted(true);
+          setAudioBlocked(true);
+          vid.play().catch(() => {});
+        });
+    }
 
-    const startTime = Date.now();
-    const targetDuration = 1800; // 1.8s smooth duration
-
-    const frameInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const calculatedProgress = Math.min(100, Math.round((elapsed / targetDuration) * 100));
-
-      setProgress(calculatedProgress);
-
-      if (calculatedProgress < 25) {
-        setStatusMessage('Memuat arsitektur UI & aset visual beresolusi tinggi...');
-      } else if (calculatedProgress < 55) {
-        setStatusMessage('Inisialisasi subsistem Web NFC 13.56 MHz & protokol ISO-14443A...');
-      } else if (calculatedProgress < 85) {
-        setStatusMessage('Mengoptimalkan responsivitas layout 60 FPS & audio synth...');
-      } else if (calculatedProgress < 100) {
-        setStatusMessage('Sinkronisasi identitas developer Ilham Fazril...');
-      } else {
-        setStatusMessage('Pemuatan selesai! Memasuki halaman utama...');
-        clearInterval(frameInterval);
-        try {
-          sound.playSuccess();
-        } catch {}
-        setTimeout(() => {
-          triggerDismiss();
-        }, 250);
-      }
-    }, 45);
-
-    // Hard fail-safe watchdog timer: strictly auto-enter after 2.5 seconds max
+    // Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
     const watchdog = setTimeout(() => {
-      clearInterval(frameInterval);
-      triggerDismiss();
-    }, 2500);
-
-    // Global keyboard listener (Escape, Space, Enter)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        try {
-          sound.playClick();
-        } catch {}
-        triggerDismiss();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
+      triggerExit();
+    }, 16000);
 
     return () => {
-      clearInterval(frameInterval);
       clearTimeout(watchdog);
-      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showWebsiteIntro, isDismissed, safeScrollToTop, triggerDismiss]);
+  }, [showWebsiteIntro, introConfig.enabled, safeScrollToTop, triggerExit]);
 
-  if (!showWebsiteIntro || isDismissed) {
+  // Screen click handler: if audio was blocked by browser policy, tap anywhere to unmute
+  const handleScreenClick = () => {
+    const vid = videoRef.current;
+    if (vid && vid.muted) {
+      vid.muted = false;
+      setIsMuted(false);
+      setAudioBlocked(false);
+    }
+  };
+
+  const handleToggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const vid = videoRef.current;
+    if (vid) {
+      vid.muted = !vid.muted;
+      setIsMuted(vid.muted);
+      if (!vid.muted) setAudioBlocked(false);
+    }
+  };
+
+  // If intro disabled from admin or not active, do not render
+  if (!showWebsiteIntro || !introConfig.enabled) {
     return null;
   }
 
+  const videoSource = introConfig.videoUrl || '/intro.mp4';
+
   return (
     <div
-      id="modern-website-intro-overlay"
-      className={`fixed inset-0 z-[9999] bg-black text-white flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden select-none cursor-default transition-opacity duration-300 ${
-        isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
+      id="modern-website-intro-fullscreen"
+      onClick={handleScreenClick}
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none transition-opacity duration-500 ${
+        isTransitioning ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'
       }`}
-      aria-label="Animasi Pembuka Website Ilham Fazril"
+      aria-label="Video Intro Sinematik Layar Penuh"
     >
-      {/* Background Cyber Grid & Ambient Glows */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#06b6d40f_1px,transparent_1px),linear-gradient(to_bottom,#06b6d40f_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+      {/* Absolute Fullscreen Video Background */}
+      <video
+        ref={videoRef}
+        src={videoSource}
+        playsInline
+        webkit-playsinline="true"
+        x5-video-player-type="h5"
+        autoPlay
+        controls={false}
+        preload="auto"
+        onEnded={triggerExit}
+        onError={() => {
+          // If video fails to load, gracefully exit to website
+          console.warn('Intro video playback error, skipping to website.');
+          triggerExit();
+        }}
+        className="w-full h-full object-contain md:object-cover bg-black"
+      />
 
-      {/* Main Glass Card Container */}
-      <div 
-        onClick={e => e.stopPropagation()} 
-        className="relative w-full max-w-lg rounded-3xl bg-stone-950/95 border border-cyan-500/40 p-6 sm:p-10 backdrop-blur-2xl shadow-[0_0_60px_rgba(6,182,212,0.22)] flex flex-col items-center text-center space-y-6 cursor-default"
-      >
-        {/* Holographic Monogram Hexagon Badge */}
-        <div className="relative">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-600 to-cyan-500 p-[2px] shadow-lg shadow-cyan-500/40 animate-pulse">
-            <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-cyan-500/10" />
-              <span className="font-serif-luxury font-black text-3xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-200 to-cyan-400 tracking-wider">
-                IF
-              </span>
-            </div>
-          </div>
-          <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md text-[10px] font-mono-tech font-bold bg-cyan-500 text-black shadow-md uppercase tracking-wider">
-            PORTFOLIO
-          </span>
-        </div>
-
-        {/* Title & Role */}
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono-tech font-bold uppercase tracking-widest">
-            <Cpu size={13} className="animate-spin" />
-            <span>Digital Architect & Hardware Engineer</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl font-serif-luxury font-black text-white tracking-tight">
-            ILHAM FAZRIL
-          </h1>
-
-          <p className="text-xs sm:text-sm text-stone-300 font-mono-tech max-w-sm mx-auto leading-relaxed">
-            Memuat Antarmuka Portofolio &amp; Arsitektur Web NFC 13.56 MHz
-          </p>
-        </div>
-
-        {/* Real-Time System Telemetry & Loading Progress Bar */}
-        <div className="w-full space-y-3 pt-2">
-          <div className="flex items-center justify-between text-xs font-mono-tech">
-            <span className="flex items-center gap-1.5 text-cyan-300 font-bold truncate max-w-[280px] sm:max-w-xs text-left">
-              {progress < 100 ? (
-                <Loader2 size={13} className="animate-spin text-cyan-400 shrink-0" />
-              ) : (
-                <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-              )}
-              <span className="truncate">{statusMessage}</span>
-            </span>
-            <span className="font-bold text-white font-mono-tech text-sm shrink-0 pl-2">
-              {progress}%
-            </span>
-          </div>
-
-          {/* Progress Bar with Glow */}
-          <div className="w-full h-3 rounded-full bg-stone-900 overflow-hidden p-[2px] border border-cyan-500/40">
-            <div 
-              className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-500 transition-all duration-100 ease-out shadow-[0_0_12px_#06b6d4]"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          {/* Telemetry Chips */}
-          <div className="grid grid-cols-3 gap-2 pt-2 text-[10px] font-mono-tech text-stone-400">
-            <div className="p-2 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center justify-center gap-1">
-              <Radio size={11} className="text-cyan-400 shrink-0" />
-              <span className="truncate">NFC 13.56M</span>
-            </div>
-            <div className="p-2 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center justify-center gap-1">
-              <Layers size={11} className="text-cyan-400 shrink-0" />
-              <span className="truncate">Next.js + TS</span>
-            </div>
-            <div className="p-2 rounded-xl bg-stone-900/90 border border-stone-800 flex items-center justify-center gap-1">
-              <Volume2 size={11} className="text-cyan-400 shrink-0" />
-              <span className="truncate">Audio Synth</span>
-            </div>
-          </div>
-        </div>
-
-        {/* System Auto-Launch Status Indicator */}
-        <div className="flex items-center justify-center w-full pt-1">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-950/40 border border-cyan-500/25 text-[11px] font-mono-tech text-cyan-300">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            <span>Memuat sistem secara otomatis...</span>
-          </div>
-        </div>
-
+      {/* Discreet Audio Status Control (Pure Icon, No Text) */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          type="button"
+          onClick={handleToggleMute}
+          className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 text-white/80 hover:text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-lg"
+          aria-label={isMuted ? 'Nyalakan Audio' : 'Matikan Audio'}
+        >
+          {isMuted ? (
+            <VolumeX size={18} className="text-amber-400" />
+          ) : (
+            <Volume2 size={18} className="text-cyan-400" />
+          )}
+        </button>
       </div>
+
+      {/* If Audio was auto-blocked by browser, subtle pulsing icon prompt at bottom (No text) */}
+      {audioBlocked && (
+        <div 
+          onClick={handleToggleMute}
+          className="absolute bottom-6 inset-x-0 flex justify-center z-20 pointer-events-auto cursor-pointer"
+        >
+          <div className="px-3.5 py-2 rounded-full bg-black/70 border border-cyan-400/50 backdrop-blur-md shadow-2xl flex items-center gap-2 text-cyan-300 animate-pulse">
+            <VolumeX size={16} className="text-amber-400" />
+            <Volume2 size={16} className="text-cyan-400" />
+          </div>
+        </div>
+      )}
+
+      {/* Seamless Transition Overlay */}
+      {isTransitioning && (
+        <div className="absolute inset-0 bg-black animate-fade-in pointer-events-none" />
+      )}
     </div>
   );
 };

@@ -13,7 +13,8 @@ import {
   AuthMethod,
   EducationItem,
   AnnouncementItem,
-  ProfileConfig
+  ProfileConfig,
+  IntroConfig
 } from '../types';
 import { 
   INITIAL_SOCIALS, 
@@ -47,6 +48,8 @@ interface PortfolioContextType {
   // View Mode & Intros
   viewMode: 'public' | 'admin';
   setViewMode: (mode: 'public' | 'admin') => void;
+  introConfig: IntroConfig;
+  updateIntroConfig: (config: Partial<IntroConfig>) => Promise<void>;
   showWebsiteIntro: boolean;
   setShowWebsiteIntro: (show: boolean) => void;
   showNfcLoginIntro: boolean;
@@ -189,8 +192,41 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return saved !== null ? saved === 'true' : true;
   });
 
+  // Default Intro Configuration
+  const DEFAULT_INTRO_CONFIG: IntroConfig = {
+    enabled: true,
+    frequency: 'every_refresh',
+    videoUrl: '/intro.mp4',
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Intro Configuration State (syncs realtime with Firestore)
+  const [introConfig, setIntroConfig] = useState<IntroConfig>(() => {
+    const saved = getStoredItem('ilham_intro_config');
+    if (saved) {
+      try {
+        return { ...DEFAULT_INTRO_CONFIG, ...JSON.parse(saved) };
+      } catch {}
+    }
+    return DEFAULT_INTRO_CONFIG;
+  });
+
   // Website Intro State (Modern Entrance)
-  const [showWebsiteIntro, setShowWebsiteIntro] = useState<boolean>(true);
+  const [showWebsiteIntro, setShowWebsiteIntro] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const savedConfig = localStorage.getItem('ilham_intro_config');
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig) as IntroConfig;
+        if (parsed.enabled === false) return false;
+        if (parsed.frequency === 'once_per_session') {
+          const viewed = sessionStorage.getItem('ilham_intro_viewed');
+          if (viewed) return false;
+        }
+      }
+    } catch {}
+    return true;
+  });
 
   // NFC Login Intro State (Specialized 13.56 MHz Card Login Intro)
   const [showNfcLoginIntro, setShowNfcLoginIntro] = useState<boolean>(false);
@@ -554,6 +590,27 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     );
 
+    // 9. Intro settings real-time listener
+    const unsubIntro = onSnapshot(
+      doc(db, 'settings', 'introConfig'),
+      (snap) => {
+        if (!isMounted) return;
+        setIsFirebaseConnected(true);
+        if (snap.exists()) {
+          const data = snap.data() as IntroConfig;
+          setIntroConfig(prev => ({ ...prev, ...data }));
+          if (data.enabled === false) {
+            setShowWebsiteIntro(false);
+          }
+        } else {
+          setDoc(doc(db, 'settings', 'introConfig'), cleanPayload(DEFAULT_INTRO_CONFIG)).catch(() => {});
+        }
+      },
+      (err) => {
+        console.warn('Firestore intro settings sync fallback:', err);
+      }
+    );
+
     return () => {
       isMounted = false;
       unsubProfile();
@@ -564,6 +621,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       unsubSocials();
       unsubNfcCards();
       unsubAnalytics();
+      unsubIntro();
     };
   }, []);
 
@@ -1127,6 +1185,24 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDoc(doc(db, 'profile', 'main'), cleanPayload(INITIAL_PROFILE)).catch(() => {});
   };
 
+  // Intro Config Update Action
+  const updateIntroConfig = async (newConfig: Partial<IntroConfig>) => {
+    const updated: IntroConfig = {
+      ...introConfig,
+      ...newConfig,
+      updatedAt: new Date().toISOString(),
+    };
+    setIntroConfig(updated);
+    try {
+      localStorage.setItem('ilham_intro_config', JSON.stringify(updated));
+      await setDoc(doc(db, 'settings', 'introConfig'), cleanPayload(updated));
+      await setDoc(doc(db, 'profile', 'introConfig'), cleanPayload(updated)).catch(() => {});
+      sound.playSuccess();
+    } catch (err) {
+      console.error('Failed to sync intro config to Firestore:', err);
+    }
+  };
+
   return (
     <PortfolioContext.Provider
       value={{
@@ -1135,6 +1211,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         toggleTheme,
         viewMode,
         setViewMode,
+        introConfig,
+        updateIntroConfig,
         showWebsiteIntro,
         setShowWebsiteIntro,
         showNfcLoginIntro,

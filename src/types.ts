@@ -122,3 +122,10 @@ export interface DeveloperSession {
   token: string | null;
   loginTimestamp: string | null;
 }
+
+export interface IntroConfig {
+  enabled: boolean;
+  frequency: 'every_refresh' | 'once_per_session';
+  videoUrl: string;
+  updatedAt?: string;
+}

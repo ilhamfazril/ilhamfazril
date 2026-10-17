@@ -5,12 +5,13 @@ import {
   ArrowUp, 
   Sparkles, 
   Radio, 
-  Code2
+  Code2,
+  Play
 } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
 export const Footer: React.FC = () => {
-  const { auth, setViewMode, setShowAuthModal, setAuthModalTab } = usePortfolio();
+  const { auth, setViewMode, setShowAuthModal, setAuthModalTab, setShowWebsiteIntro } = usePortfolio();
 
   const scrollToTop = () => {
     sound.playClick();
@@ -40,6 +41,21 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5">
+            {/* Replay Video Intro */}
+            <button
+              id="footer-replay-intro-btn"
+              onClick={() => {
+                sound.playClick();
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                setShowWebsiteIntro(true);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-mono-tech flex items-center gap-2 transition-all cursor-pointer shadow-md font-bold"
+              title="Putar Ulang Video Intro Sinematik"
+            >
+              <Play size={14} className="fill-cyan-400 text-cyan-400" />
+              <span>Putar Ulang Video Intro</span>
+            </button>
+
             {/* Developer Mode Quick Trigger */}
             <button
               id="footer-dev-portal-btn"

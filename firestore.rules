@@ -54,6 +54,12 @@ service cloud.firestore {
       allow read, write: if isValidId(inquiryId);
     }
 
+    // Settings: readable by all, writable with valid id
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isValidId(settingId);
+    }
+
     // Test connection doc
     match /test/{testId} {
       allow read, write: if true;
