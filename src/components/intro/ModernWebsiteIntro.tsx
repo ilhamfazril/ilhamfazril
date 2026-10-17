@@ -27,7 +27,6 @@ export const ModernWebsiteIntro: React.FC = () => {
     if (hasTriggeredExit.current) return;
     hasTriggeredExit.current = true;
 
-    // Mark as viewed for session if frequency is once_per_session
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('ilham_intro_viewed', 'true');
@@ -41,53 +40,67 @@ export const ModernWebsiteIntro: React.FC = () => {
       sound.playSuccess();
     } catch {}
 
-    // Smooth cinematic fade transition into the main portfolio
     setTimeout(() => {
       setShowWebsiteIntro(false);
       safeScrollToTop();
-    }, 500);
+    }, 450);
   }, [safeScrollToTop, setShowWebsiteIntro]);
 
-  // Handle first touch anywhere on screen: unlocks audio and starts unmuted video playback
-  const handleStart = (e?: React.SyntheticEvent | Event) => {
+  // Guaranteed video start handler
+  const handleStart = useCallback(() => {
     if (hasStarted) return;
-    if (e && 'preventDefault' in e && typeof e.preventDefault === 'function') {
-      e.preventDefault();
-    }
+    setHasStarted(true);
 
     try {
       sound.playClick();
     } catch {}
 
-    // Unlock Web Audio Context pipeline in browser
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        if (ctx.state === 'suspended') {
-          ctx.resume().catch(() => {});
-        }
-      }
-    } catch {}
-
-    setHasStarted(true);
-
     const vid = videoRef.current;
-    if (vid) {
-      vid.currentTime = 0;
-      vid.volume = 1.0;
-      vid.muted = false;
-      const playPromise = vid.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.warn('Initial play retry:', err);
-          vid.play().catch(() => {});
-        });
-      }
-    }
-  };
+    if (!vid) return;
 
-  // Anti-Pause Watchdog: If anything tries to pause while playing, force resume immediately
+    // Reset and try unmuted playback with full volume
+    vid.currentTime = 0;
+    vid.volume = 1.0;
+    vid.muted = false;
+
+    const playPromise = vid.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn('Browser held unmuted audio, falling back to muted play immediately:', err);
+        // CRITICAL FALLBACK: If browser rejects unmuted audio, MUST set muted=true and play!
+        // This guarantees the video ALWAYS plays and NEVER stays on a black screen!
+        vid.muted = true;
+        vid.play().catch(() => {
+          // If video still cannot play, smoothly enter site
+          triggerExit();
+        });
+      });
+    }
+
+    // Safety watchdog: after 350ms, if still paused for any reason, force play muted
+    setTimeout(() => {
+      if (vid && vid.paused && !hasTriggeredExit.current) {
+        vid.muted = true;
+        vid.play().catch(() => {});
+      }
+    }, 350);
+  }, [hasStarted, triggerExit]);
+
+  // If video is playing and user taps, ensure audio is unmuted without pausing
+  const handleScreenTap = useCallback(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    if (vid.muted) {
+      vid.muted = false;
+      vid.volume = 1.0;
+    }
+    if (vid.paused && !hasTriggeredExit.current) {
+      vid.play().catch(() => {});
+    }
+  }, []);
+
+  // Anti-pause guard & timeout failsafe
   useEffect(() => {
     if (!hasStarted) return;
 
@@ -102,7 +115,7 @@ export const ModernWebsiteIntro: React.FC = () => {
 
     vid.addEventListener('pause', forceResumeOnPause);
 
-    // Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
+    // Watchdog to guarantee website access after 16 seconds
     const watchdog = setTimeout(() => {
       triggerExit();
     }, 16000);
@@ -113,7 +126,7 @@ export const ModernWebsiteIntro: React.FC = () => {
     };
   }, [hasStarted, triggerExit]);
 
-  // Support Space or Enter key to start experience
+  // Keyboard shortcut (Space / Enter)
   useEffect(() => {
     if (!showWebsiteIntro || hasStarted) return;
 
@@ -126,9 +139,8 @@ export const ModernWebsiteIntro: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showWebsiteIntro, hasStarted]);
+  }, [showWebsiteIntro, hasStarted, handleStart]);
 
-  // If intro disabled from admin or not active, do not render
   if (!showWebsiteIntro || !introConfig.enabled) {
     return null;
   }
@@ -139,8 +151,7 @@ export const ModernWebsiteIntro: React.FC = () => {
     <div
       id="modern-website-intro-fullscreen"
       onContextMenu={(e) => e.preventDefault()}
-      onClick={!hasStarted ? handleStart : undefined}
-      onTouchStart={!hasStarted ? handleStart : undefined}
+      onClick={hasStarted ? handleScreenTap : handleStart}
       style={{
         WebkitTouchCallout: 'none',
         WebkitUserSelect: 'none',
@@ -151,8 +162,9 @@ export const ModernWebsiteIntro: React.FC = () => {
       aria-label="Video Intro Sinematik Layar Penuh"
     >
       {/* 
-        Full Video Element (Always mounted to be ready instantly)
-        pointer-events-none: Prevents Android Chrome tap-to-pause default behavior
+        Video Element:
+        pointer-events-none prevents native tap-to-pause from intercepting clicks.
+        Always mounted with preload so it starts instantaneously.
       */}
       <video
         ref={videoRef}
@@ -162,30 +174,26 @@ export const ModernWebsiteIntro: React.FC = () => {
         x5-video-player-type="h5"
         controls={false}
         preload="auto"
-        onPause={() => {
-          if (!hasTriggeredExit.current && videoRef.current) {
-            videoRef.current.play().catch(() => {});
-          }
-        }}
         onEnded={triggerExit}
         onError={() => {
-          console.warn('Intro video error, continuing to website.');
+          console.warn('Video load error, exiting to site.');
           triggerExit();
         }}
-        className={`w-full h-full object-contain md:object-cover bg-black pointer-events-none select-none transition-opacity duration-300 ${
-          hasStarted ? 'opacity-100' : 'opacity-0'
-        }`}
+        className="w-full h-full object-contain md:object-cover bg-black pointer-events-none select-none"
       />
 
-      {/* PHASE 1: ELEGAN 1-TOUCH ENTRANCE SCREEN (Before User Touches) */}
+      {/* PHASE 1: ELEGAN ENTRANCE BUTTON (Before User Starts) */}
       {!hasStarted && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 p-4 text-center select-none">
+        <div 
+          onClick={handleStart}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 p-4 text-center select-none cursor-pointer"
+        >
           {/* Subtle Ambient Radial Light */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#082f49_0%,#030712_70%,#000000_100%)] opacity-90 pointer-events-none" />
 
           {/* Centered Glowing Play Badge */}
-          <div className="relative group cursor-pointer flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 z-10">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-cyan-500 via-sky-400 to-blue-600 p-[2px] shadow-[0_0_50px_rgba(6,182,212,0.45)] flex items-center justify-center animate-pulse">
+          <div className="relative group cursor-pointer flex flex-col items-center animate-in fade-in zoom-in-95 duration-400 z-10">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-cyan-500 via-sky-400 to-blue-600 p-[2px] shadow-[0_0_50px_rgba(6,182,212,0.5)] flex items-center justify-center animate-pulse">
               <div className="w-full h-full bg-black rounded-full flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Play size={36} className="fill-cyan-400 text-cyan-400 ml-1.5 drop-shadow-[0_0_12px_#22d3ee]" />
               </div>
@@ -195,7 +203,7 @@ export const ModernWebsiteIntro: React.FC = () => {
               <h1 className="font-serif-luxury font-black text-2xl sm:text-3xl text-white tracking-widest drop-shadow-md">
                 ILHAM FAZRIL
               </h1>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs sm:text-sm font-mono font-bold tracking-wider animate-pulse">
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black text-xs sm:text-sm font-mono font-bold uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/30">
                 <span>Ketuk Layar untuk Memulai</span>
               </div>
             </div>
