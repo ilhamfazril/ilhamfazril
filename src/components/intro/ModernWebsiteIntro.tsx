@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
+import { Play } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
 export const ModernWebsiteIntro: React.FC = () => {
   const { showWebsiteIntro, setShowWebsiteIntro, introConfig } = usePortfolio();
   
+  const [hasStarted, setHasStarted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasTriggeredExit = useRef(false);
@@ -46,21 +48,18 @@ export const ModernWebsiteIntro: React.FC = () => {
     }, 500);
   }, [safeScrollToTop, setShowWebsiteIntro]);
 
-  // Handler to unmute audio and strictly enforce continuous playback (anti-pause)
-  const handleUnmuteAndEnsurePlayback = useCallback(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
-
-    // 1. Force audio unmuted & maximum volume
-    vid.muted = false;
-    vid.volume = 1.0;
-
-    // 2. Anti-pause: if browser somehow paused, immediately resume playback
-    if (vid.paused) {
-      vid.play().catch(() => {});
+  // Handle first touch anywhere on screen: unlocks audio and starts unmuted video playback
+  const handleStart = (e?: React.SyntheticEvent | Event) => {
+    if (hasStarted) return;
+    if (e && 'preventDefault' in e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
     }
 
-    // 3. Unlock Web Audio Context pipeline in mobile browser
+    try {
+      sound.playClick();
+    } catch {}
+
+    // Unlock Web Audio Context pipeline in browser
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
@@ -70,50 +69,40 @@ export const ModernWebsiteIntro: React.FC = () => {
         }
       }
     } catch {}
-  }, []);
 
-  // Video Autoplay & Anti-Pause Watchdogs
+    setHasStarted(true);
+
+    const vid = videoRef.current;
+    if (vid) {
+      vid.currentTime = 0;
+      vid.volume = 1.0;
+      vid.muted = false;
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('Initial play retry:', err);
+          vid.play().catch(() => {});
+        });
+      }
+    }
+  };
+
+  // Anti-Pause Watchdog: If anything tries to pause while playing, force resume immediately
   useEffect(() => {
-    if (!showWebsiteIntro || !introConfig.enabled) return;
+    if (!hasStarted) return;
 
-    safeScrollToTop();
     const vid = videoRef.current;
     if (!vid) return;
 
-    vid.currentTime = 0;
-    vid.volume = 1.0;
-    vid.muted = false;
-
-    // 1. Attempt unmuted playback directly on load
-    const playPromise = vid.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((err) => {
-        // If mobile browser blocks unmuted playback before first touch, start playing muted
-        console.warn('Browser autoplay held audio until first interaction:', err);
-        vid.muted = true;
-        vid.play().catch(() => {});
-      });
-    }
-
-    // 2. Strict Anti-Pause Listener: If the browser tries to pause, immediately force resume!
     const forceResumeOnPause = () => {
       if (!hasTriggeredExit.current && vid && vid.paused) {
         vid.play().catch(() => {});
       }
     };
+
     vid.addEventListener('pause', forceResumeOnPause);
 
-    // 3. Global Interaction Listeners: First touch anywhere on screen unlocks audio & ensures play
-    const handleGlobalInteraction = (e: Event) => {
-      handleUnmuteAndEnsurePlayback();
-    };
-
-    window.addEventListener('touchstart', handleGlobalInteraction, { capture: true, passive: true });
-    window.addEventListener('pointerdown', handleGlobalInteraction, { capture: true, passive: true });
-    window.addEventListener('mousedown', handleGlobalInteraction, { capture: true, passive: true });
-    window.addEventListener('keydown', handleGlobalInteraction, { capture: true, passive: true });
-
-    // 4. Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
+    // Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
     const watchdog = setTimeout(() => {
       triggerExit();
     }, 16000);
@@ -121,12 +110,23 @@ export const ModernWebsiteIntro: React.FC = () => {
     return () => {
       clearTimeout(watchdog);
       vid.removeEventListener('pause', forceResumeOnPause);
-      window.removeEventListener('touchstart', handleGlobalInteraction, true);
-      window.removeEventListener('pointerdown', handleGlobalInteraction, true);
-      window.removeEventListener('mousedown', handleGlobalInteraction, true);
-      window.removeEventListener('keydown', handleGlobalInteraction, true);
     };
-  }, [showWebsiteIntro, introConfig.enabled, safeScrollToTop, triggerExit, handleUnmuteAndEnsurePlayback]);
+  }, [hasStarted, triggerExit]);
+
+  // Support Space or Enter key to start experience
+  useEffect(() => {
+    if (!showWebsiteIntro || hasStarted) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handleStart();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWebsiteIntro, hasStarted]);
 
   // If intro disabled from admin or not active, do not render
   if (!showWebsiteIntro || !introConfig.enabled) {
@@ -138,16 +138,21 @@ export const ModernWebsiteIntro: React.FC = () => {
   return (
     <div
       id="modern-website-intro-fullscreen"
-      onClick={handleUnmuteAndEnsurePlayback}
-      onTouchStart={handleUnmuteAndEnsurePlayback}
-      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none transition-opacity duration-500 cursor-default touch-none ${
+      onContextMenu={(e) => e.preventDefault()}
+      onClick={!hasStarted ? handleStart : undefined}
+      onTouchStart={!hasStarted ? handleStart : undefined}
+      style={{
+        WebkitTouchCallout: 'none',
+        WebkitUserSelect: 'none',
+      }}
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none transition-opacity duration-500 cursor-pointer ${
         isTransitioning ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'
       }`}
       aria-label="Video Intro Sinematik Layar Penuh"
     >
       {/* 
-        Video Element with pointer-events-none:
-        Completely disables mobile browser default tap-to-pause behavior on the video element!
+        Full Video Element (Always mounted to be ready instantly)
+        pointer-events-none: Prevents Android Chrome tap-to-pause default behavior
       */}
       <video
         ref={videoRef}
@@ -155,11 +160,9 @@ export const ModernWebsiteIntro: React.FC = () => {
         playsInline
         webkit-playsinline="true"
         x5-video-player-type="h5"
-        autoPlay
         controls={false}
         preload="auto"
         onPause={() => {
-          // Additional inline anti-pause guard
           if (!hasTriggeredExit.current && videoRef.current) {
             videoRef.current.play().catch(() => {});
           }
@@ -169,12 +172,44 @@ export const ModernWebsiteIntro: React.FC = () => {
           console.warn('Intro video error, continuing to website.');
           triggerExit();
         }}
-        className="w-full h-full object-contain md:object-cover bg-black pointer-events-none select-none"
+        className={`w-full h-full object-contain md:object-cover bg-black pointer-events-none select-none transition-opacity duration-300 ${
+          hasStarted ? 'opacity-100' : 'opacity-0'
+        }`}
       />
+
+      {/* PHASE 1: ELEGAN 1-TOUCH ENTRANCE SCREEN (Before User Touches) */}
+      {!hasStarted && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 p-4 text-center select-none">
+          {/* Subtle Ambient Radial Light */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#082f49_0%,#030712_70%,#000000_100%)] opacity-90 pointer-events-none" />
+
+          {/* Centered Glowing Play Badge */}
+          <div className="relative group cursor-pointer flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 z-10">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-cyan-500 via-sky-400 to-blue-600 p-[2px] shadow-[0_0_50px_rgba(6,182,212,0.45)] flex items-center justify-center animate-pulse">
+              <div className="w-full h-full bg-black rounded-full flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Play size={36} className="fill-cyan-400 text-cyan-400 ml-1.5 drop-shadow-[0_0_12px_#22d3ee]" />
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <h1 className="font-serif-luxury font-black text-2xl sm:text-3xl text-white tracking-widest drop-shadow-md">
+                ILHAM FAZRIL
+              </h1>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs sm:text-sm font-mono font-bold tracking-wider animate-pulse">
+                <span>Ketuk Layar untuk Memulai</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] font-mono text-stone-500 mt-4 tracking-wide">
+              Audio Sinematik Full HD • 60 FPS
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Seamless Transition Overlay */}
       {isTransitioning && (
-        <div className="absolute inset-0 bg-black animate-fade-in pointer-events-none" />
+        <div className="absolute inset-0 bg-black animate-fade-in pointer-events-none z-30" />
       )}
     </div>
   );
