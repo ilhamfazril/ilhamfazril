@@ -2,16 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
-import { Volume2, VolumeX } from 'lucide-react';
 import { sound } from '../../utils/soundEffects';
 
 export const ModernWebsiteIntro: React.FC = () => {
   const { showWebsiteIntro, setShowWebsiteIntro, introConfig } = usePortfolio();
   
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [audioBlocked, setAudioBlocked] = useState(false);
-  
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasTriggeredExit = useRef(false);
 
@@ -43,14 +39,14 @@ export const ModernWebsiteIntro: React.FC = () => {
       sound.playSuccess();
     } catch {}
 
-    // Smooth cinematic iris/fade transition into the main portfolio
+    // Smooth cinematic fade transition into the main portfolio
     setTimeout(() => {
       setShowWebsiteIntro(false);
       safeScrollToTop();
     }, 500);
   }, [safeScrollToTop, setShowWebsiteIntro]);
 
-  // Video Autoplay Initialization
+  // Video Autoplay & Unmuted Audio Handling
   useEffect(() => {
     if (!showWebsiteIntro || !introConfig.enabled) return;
 
@@ -59,54 +55,51 @@ export const ModernWebsiteIntro: React.FC = () => {
     if (!vid) return;
 
     vid.currentTime = 0;
-    
-    // Attempt unmuted playback first
+    vid.volume = 1.0;
+    vid.muted = false;
+
+    // 1. Attempt unmuted playback directly
     const playPromise = vid.play();
     if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsMuted(false);
-          setAudioBlocked(false);
-        })
-        .catch((err) => {
-          // If browser strictly blocks unmuted autoplay without prior gesture, start muted
-          console.warn('Browser requires user interaction for unmuted audio, playing muted fallback:', err);
-          vid.muted = true;
-          setIsMuted(true);
-          setAudioBlocked(true);
-          vid.play().catch(() => {});
-        });
+      playPromise.catch((err) => {
+        // If browser blocks unmuted autoplay without prior gesture, start muted temporarily
+        console.warn('Browser autoplay policy held audio until first interaction:', err);
+        vid.muted = true;
+        vid.play().catch(() => {});
+      });
     }
 
-    // Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
+    // 2. Immediate unmute on the first user touch or click anywhere on screen
+    const handleFirstInteraction = () => {
+      if (vid) {
+        vid.muted = false;
+        vid.volume = 1.0;
+      }
+      removeListeners();
+    };
+
+    const removeListeners = () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction, true);
+      window.removeEventListener('touchstart', handleFirstInteraction, true);
+      window.removeEventListener('click', handleFirstInteraction, true);
+      window.removeEventListener('keydown', handleFirstInteraction, true);
+    };
+
+    window.addEventListener('pointerdown', handleFirstInteraction, true);
+    window.addEventListener('touchstart', handleFirstInteraction, true);
+    window.addEventListener('click', handleFirstInteraction, true);
+    window.addEventListener('keydown', handleFirstInteraction, true);
+
+    // 3. Fail-safe watchdog: automatically transition after 16 seconds if onEnded doesn't fire
     const watchdog = setTimeout(() => {
       triggerExit();
     }, 16000);
 
     return () => {
       clearTimeout(watchdog);
+      removeListeners();
     };
   }, [showWebsiteIntro, introConfig.enabled, safeScrollToTop, triggerExit]);
-
-  // Screen click handler: if audio was blocked by browser policy, tap anywhere to unmute
-  const handleScreenClick = () => {
-    const vid = videoRef.current;
-    if (vid && vid.muted) {
-      vid.muted = false;
-      setIsMuted(false);
-      setAudioBlocked(false);
-    }
-  };
-
-  const handleToggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const vid = videoRef.current;
-    if (vid) {
-      vid.muted = !vid.muted;
-      setIsMuted(vid.muted);
-      if (!vid.muted) setAudioBlocked(false);
-    }
-  };
 
   // If intro disabled from admin or not active, do not render
   if (!showWebsiteIntro || !introConfig.enabled) {
@@ -118,13 +111,12 @@ export const ModernWebsiteIntro: React.FC = () => {
   return (
     <div
       id="modern-website-intro-fullscreen"
-      onClick={handleScreenClick}
-      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] w-screen h-screen bg-black overflow-hidden flex items-center justify-center select-none transition-opacity duration-500 cursor-default ${
         isTransitioning ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100 pointer-events-auto'
       }`}
       aria-label="Video Intro Sinematik Layar Penuh"
     >
-      {/* Absolute Fullscreen Video Background */}
+      {/* 100% Pure Fullscreen Video, No Buttons, No Icons, No Text */}
       <video
         ref={videoRef}
         src={videoSource}
@@ -136,41 +128,11 @@ export const ModernWebsiteIntro: React.FC = () => {
         preload="auto"
         onEnded={triggerExit}
         onError={() => {
-          // If video fails to load, gracefully exit to website
-          console.warn('Intro video playback error, skipping to website.');
+          console.warn('Intro video error, continuing to website.');
           triggerExit();
         }}
         className="w-full h-full object-contain md:object-cover bg-black"
       />
-
-      {/* Discreet Audio Status Control (Pure Icon, No Text) */}
-      <div className="absolute top-4 right-4 z-20">
-        <button
-          type="button"
-          onClick={handleToggleMute}
-          className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 border border-white/20 text-white/80 hover:text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-lg"
-          aria-label={isMuted ? 'Nyalakan Audio' : 'Matikan Audio'}
-        >
-          {isMuted ? (
-            <VolumeX size={18} className="text-amber-400" />
-          ) : (
-            <Volume2 size={18} className="text-cyan-400" />
-          )}
-        </button>
-      </div>
-
-      {/* If Audio was auto-blocked by browser, subtle pulsing icon prompt at bottom (No text) */}
-      {audioBlocked && (
-        <div 
-          onClick={handleToggleMute}
-          className="absolute bottom-6 inset-x-0 flex justify-center z-20 pointer-events-auto cursor-pointer"
-        >
-          <div className="px-3.5 py-2 rounded-full bg-black/70 border border-cyan-400/50 backdrop-blur-md shadow-2xl flex items-center gap-2 text-cyan-300 animate-pulse">
-            <VolumeX size={16} className="text-amber-400" />
-            <Volume2 size={16} className="text-cyan-400" />
-          </div>
-        </div>
-      )}
 
       {/* Seamless Transition Overlay */}
       {isTransitioning && (
